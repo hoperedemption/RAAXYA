@@ -85,7 +85,7 @@ class LogisticRegression(object):
 
 
 
-    def __init__(self, lr, max_iters=500):
+    def __init__(self, lr=0.001, max_iters=1000):
         """
         Initialize the new object (see dummy_methods.py)
         and set its arguments.
@@ -114,14 +114,21 @@ class LogisticRegression(object):
         ###
         ##
         self.N, self.D, self.C = training_data.shape[0], training_data.shape[1], get_n_classes(training_labels)
-        self.weights = np.random.normal(0, 0.1, (self.D, self.C))
+        # self.weights = np.random.normal(0, 1, (self.D, self.C)) * (1 / np.sqrt(self.D))
+        # self.weights = np.random.normal(0, 2, (self.D, self.C)) * (1 / np.sqrt(self.D))
+        self.weights = np.random.normal(0, 0.001, (self.D, self.C))
+        self.velocity = 0
+        self.ro = 0.99
+        self.epsilon = 0.001
 
+        labels = label_to_onehot(training_labels)
         for i in range(self.max_iters):
-            gradient = self.gradient_logistic_multi(training_data, training_labels, self.weights)
-            self.weights = self.weights - self.lr * gradient   
+            gradient = self.gradient_logistic_multi(training_data, labels, self.weights)
+            self.velocity = self.ro * self.velocity - gradient
+            self.weights = self.weights + self.velocity   
                     
             predictions = self.logistic_regression_predict_multi(training_data, self.weights)
-            if accuracy_fn(predictions, onehot_to_label(training_labels)) == 100:
+            if (accuracy_fn(predictions, onehot_to_label(labels)) == 100) or (self.loss_logistic_multi(training_data, labels, self.weights) < self.epsilon):
                 break
 
         # return pred_labels
