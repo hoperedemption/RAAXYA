@@ -94,12 +94,12 @@ class KNN(object):
     """
     def majority_vote(self, labels, weighting_function=None, w=False, distances=None):
         if(w == False):
-            bins = np.bincount(labels, axis=0);
-            return np.argmax(bins, axis=0)
+            bins = np.bincount(labels)
+            return np.argmax(bins)
         else:
             sample_weights = weighting_function(distances)
-            bins = np.bincount(labels, weights=sample_weights, axis=0)
-            return np.argmax(bins, axis=0)
+            bins = np.bincount(labels, weights=sample_weights)
+            return np.argmax(bins)
         
     """
     Mean vote (for regression task of knn)

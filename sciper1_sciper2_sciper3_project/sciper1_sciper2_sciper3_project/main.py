@@ -58,8 +58,12 @@ def main(args):
         xtest = xtrain[test_index]
         xtrain = xtrain[train_index]
         
-        ytest = ytrain[test_index]
-        ytrain = ytrain[train_index]
+        if(args.task == "center_locating"):
+            ctest = ctrain[test_index]
+            ctrain = ctrain[train_index]
+        elif (args.task == "breed_identifying"):
+            ytest = ytrain[test_index]
+            ytrain = ytrain[train_index]
         
     
     ### WRITE YOUR CODE HERE to do any other data processing
