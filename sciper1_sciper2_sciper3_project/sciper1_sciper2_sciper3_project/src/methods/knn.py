@@ -88,19 +88,35 @@ class KNN(object):
     Finds the most frequent class label in a list of class labels
 
     Inputs:
-        labels: (k, )
+        labels: (k x D)
     Outputs:
         the most frequent class label in labels
     """
-    def majority_vote(self, labels, w=False, distances=None):
+    def majority_vote(self, labels, weighting_function=None, w=False, distances=None):
         if(w == False):
-            bins = np.bincount(labels);
-            return np.argmax(bins)
+            bins = np.bincount(labels, axis=0);
+            return np.argmax(bins, axis=0)
         else:
-            simple_weights = self.decaying_weights(distances)
-            bins = np.bincount(labels, weights=simple_weights)
-            return np.argmax(bins)
+            sample_weights = weighting_function(distances)
+            bins = np.bincount(labels, weights=sample_weights, axis=0)
+            return np.argmax(bins, axis=0)
         
+    """
+    Mean vote (for regression task of knn)
+
+    Finds the mean value of the k nearest neighbours target values
+
+    Inputs: 
+        labels: (k x D)
+    Outputs:
+        the mean value of the values of the k nearest neighbours 
+    """
+    def mean_vote(self, target_values, weighting_function=None, w=False, distances=None):
+        if(w == False):
+            mean_val = np.mean(target_values, axis=0)
+        else:
+            mean_val = np.average(target_values, axis=0, weights=weighting_function(distances))
+        return mean_val 
     
     """
     KNN one step target vector
@@ -119,7 +135,11 @@ class KNN(object):
         distances = distance_func(target_vector)
         indices = self.find_k_smallest(distances)
         k_nearest_labels = self.training_labels[indices]
-        predicted = self.majority_vote(k_nearest_labels, w=True, distances=distances[indices])
+
+        if self.task_kind == "classification":
+            predicted = self.majority_vote(k_nearest_labels)
+        elif self.task_kind == "regression":
+            predicted = self.mean_vote(k_nearest_labels)
         return predicted
     
     """

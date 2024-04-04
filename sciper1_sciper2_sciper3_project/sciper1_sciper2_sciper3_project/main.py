@@ -45,12 +45,46 @@ def main(args):
     # Make a validation set (it can overwrite xtest, ytest)
     if not args.test:
         ### WRITE YOUR CODE HERE
-        pass
+        N = xtrain.shape[0]
+
+        percent_split = 0.8
+        n_train = int(percent_split * N)
+
+        random_index = np.random.permutation(N)
+
+        train_index = random_index[:n_train]
+        test_index = random_index[n_train:]
+
+        xtest = xtrain[test_index]
+        xtrain = xtrain[train_index]
+        
+        ytest = ytrain[test_index]
+        ytrain = ytrain[train_index]
+        
     
     ### WRITE YOUR CODE HERE to do any other data processing
 
-    
+    # normalize the data z-score
+    mu = np.mean(xtrain, axis=0)
+    sigma = np.std(xtrain, axis=0)
 
+    xtrain = (xtrain - mu) / sigma
+    xtest = (xtest - mu) / sigma
+
+    # add a bias term to test and training data
+    zeros_train = np.zeros((xtrain.shape[0], xtrain.shape[1] + 1))
+    zeros_train[:, 0] = np.ones(xtrain.shape[0])
+    zeros_train[:, 1:xtrain.shape[1] + 1] = xtrain
+
+    xtrain = zeros_train 
+
+    zeros_test = np.zeros((xtest.shape[0], xtest.shape[1] + 1))
+    zeros_test[:, 0] = np.ones(xtest.shape[0])
+    zeros_test[:, 1:xtest.shape[1] + 1] = xtest
+
+    xtest = zeros_test 
+
+    
     ## 3. Initialize the method you want to use.
 
     # Use NN (FOR MS2!)
@@ -61,8 +95,12 @@ def main(args):
     if args.method == "dummy_classifier":
         method_obj = DummyClassifier(arg1=1, arg2=2)
 
-    elif ...:  ### WRITE YOUR CODE HERE
-        pass
+    elif args.method == "knn":
+        if args.task == "center_locating":
+            task = "regression"
+        elif args.task == "breed_identifying":
+            task = "classification"
+        method_obj = KNN(args.K, task)
 
 
     ## 4. Train and evaluate the method
