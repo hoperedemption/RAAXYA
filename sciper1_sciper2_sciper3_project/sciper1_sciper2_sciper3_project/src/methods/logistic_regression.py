@@ -117,15 +117,12 @@ class LogisticRegression(object):
         # self.weights = np.random.normal(0, 1, (self.D, self.C)) * (1 / np.sqrt(self.D))
         # self.weights = np.random.normal(0, 2, (self.D, self.C)) * (1 / np.sqrt(self.D))
         self.weights = np.random.normal(0, 0.001, (self.D, self.C))
-        self.velocity = 0
-        self.ro = 0.99
         self.epsilon = 0.001
 
         labels = label_to_onehot(training_labels)
         for i in range(self.max_iters):
             gradient = self.gradient_logistic_multi(training_data, labels, self.weights)
-            self.velocity = self.ro * self.velocity - gradient
-            self.weights = self.weights + self.velocity   
+            self.weights = self.weights - self.lr * gradient   
                     
             predictions = self.logistic_regression_predict_multi(training_data, self.weights)
             if (accuracy_fn(predictions, onehot_to_label(labels)) == 100) or (self.loss_logistic_multi(training_data, labels, self.weights) < self.epsilon):
