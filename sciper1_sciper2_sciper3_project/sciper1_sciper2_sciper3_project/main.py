@@ -106,8 +106,10 @@ def main(args):
             task = "classification"
         method_obj = KNN(args.K, task)
     elif args.method == "logistic_regression":
-
-        method_obj = LogisticRegression(args.lr, args.max_iters)
+        method_obj = LogisticRegression(0.001, 1000)
+    elif args.method == "linear_regression":
+        method_obj = LinearRegression(args.lmda)
+    
 
 
     ## 4. Train and evaluate the method

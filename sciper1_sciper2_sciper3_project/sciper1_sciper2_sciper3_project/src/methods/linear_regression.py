@@ -1,5 +1,6 @@
 import numpy as np
 import sys
+import numpy.linalg as linalg
 
 class LinearRegression(object):
     """
@@ -29,23 +30,32 @@ class LinearRegression(object):
         #### YOUR CODE HERE!
         ###
         ##
+        X = training_data
+        N = training_data.shape[0]
+        D = training_data.shape[1]
+
+        weights = linalg.inv(X.T@X + self.lmda * np.eye(D)) @ X.T @ training_labels
+        self.w = weights
+        pred_regression_targets = training_data @ weights
 
         return pred_regression_targets
 
 
-def predict(self, test_data):
-        """
-            Runs prediction on the test data.
-            
-            Arguments:
-                test_data (np.array): test data of shape (N,D)
-            Returns:
-                test_labels (np.array): labels of shape (N,regression_target_size)
-        """
-        ##
-        ###
-        #### YOUR CODE HERE!
-        ###
-        ##
+    def predict(self, test_data):
+            """
+                Runs prediction on the test data.
 
-        return pred_regression_targets
+                Arguments:
+                    test_data (np.array): test data of shape (N,D)
+                Returns:
+                    test_labels (np.array): labels of shape (N,regression_target_size)
+            """
+            ##
+            ###
+            #### YOUR CODE HERE!
+            ###
+            ##
+
+            pred_regression_targets = test_data @ self.w
+
+            return pred_regression_targets

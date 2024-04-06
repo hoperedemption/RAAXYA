@@ -116,10 +116,8 @@ class LogisticRegression(object):
         ###
         ##
         self.N, self.D, self.C = training_data.shape[0], training_data.shape[1], get_n_classes(training_labels)
-        # self.weights = np.random.normal(0, 1, (self.D, self.C)) * (1 / np.sqrt(self.D))
+        self.weights = np.random.normal(0, 1, (self.D, self.C)) * (1 / np.sqrt(self.D))
         # self.weights = np.random.normal(0, 2, (self.D, self.C)) * (1 / np.sqrt(self.D))
-        self.velocity = 0
-        self.ro = 0.99
         self.epsilon = 0.001
 
         labels = label_to_onehot(training_labels)
