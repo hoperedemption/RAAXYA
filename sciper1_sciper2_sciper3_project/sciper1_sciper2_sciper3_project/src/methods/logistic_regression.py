@@ -43,7 +43,6 @@ class LogisticRegression(object):
         ### WRITE YOUR CODE HERE 
         predictions = self.f_softmax(data, W)
         
-        
         return data.T @ (predictions - labels)
 
     def f_softmax(self, data, W):
@@ -113,13 +112,20 @@ class LogisticRegression(object):
         #### WRITE YOUR CODE HERE!
         ###
         ##
+
+        
         self.N, self.D, self.C = training_data.shape[0], training_data.shape[1], get_n_classes(training_labels)
         # self.weights = np.random.normal(0, 1, (self.D, self.C)) * (1 / np.sqrt(self.D))
         # self.weights = np.random.normal(0, 2, (self.D, self.C)) * (1 / np.sqrt(self.D))
-        self.weights = np.random.normal(0, 0.001, (self.D, self.C))
+        print("D + C: " + str(self.D )+ "    " + str(self.C))
+
+        self.weights = np.random.normal(0, 0.1, (self.D, self.C))
+        print("weight init: " + str(self.weights))
+
         self.epsilon = 0.001
 
-        labels = label_to_onehot(training_labels)
+        labels = label_to_onehot(training_labels, self.C)
+
         for i in range(self.max_iters):
             gradient = self.gradient_logistic_multi(training_data, labels, self.weights)
             self.weights = self.weights - self.lr * gradient   
@@ -127,7 +133,10 @@ class LogisticRegression(object):
             predictions = self.logistic_regression_predict_multi(training_data, self.weights)
             if (accuracy_fn(predictions, onehot_to_label(labels)) == 100) or (self.loss_logistic_multi(training_data, labels, self.weights) < self.epsilon):
                 break
+            print(self.loss_logistic_multi(training_data, labels, self.weights))
 
+        # print("final weights: ")
+        # print(self.weights)
         # return pred_labels
         return predictions
 
