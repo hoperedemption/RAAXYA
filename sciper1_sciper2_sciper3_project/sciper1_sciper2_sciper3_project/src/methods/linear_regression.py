@@ -1,6 +1,7 @@
 import numpy as np
 import sys
 import numpy.linalg as linalg
+from utils import *
 
 class LinearRegression(object):
     """

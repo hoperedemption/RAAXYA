@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..utils import get_n_classes, label_to_onehot, onehot_to_label, accuracy_fn
+from ..utils import get_n_classes, label_to_onehot, onehot_to_label, accuracy_fn, mse_fn
 
 
 class LogisticRegression(object):
@@ -98,6 +98,50 @@ class LogisticRegression(object):
         """
         self.lr = lr
         self.max_iters = max_iters
+
+    def cross_validation_one_iteration(self, batch_size, X_train, X_validate, Y_train, Y_validate):
+        self.fit(X_train, Y_train)
+        Y_predicted = self.predict(X_validate)
+
+        loss = mse_fn(Y_predicted, Y_validate)
+        return loss
+        
+    def global_cross_validation(self, k, training_data, training_labels):
+        
+        N = training_data.shape[0]
+        D = training_data.shape[1]
+        batch_size = N//k
+
+        # voir plus tard pour le reste
+        random_X_indices = np.random.permutation(N)
+        all_loss = np.zeros((k + 1, 1))
+
+        for i in range(k + 1):
+            if i == k:
+                cross_validate_indices = random_X_indices[batch_size*k:]
+            else:
+                cross_validate_indices = random_X_indices[batch_size*i:batch_size*(i+1)]
+
+            training_indices = np.set1diff1d(random_X_indices, cross_validate_indices)
+
+            X_train = training_data[training_indices]
+            Y_train = training_labels[training_indices]
+
+            X_validate = training_data[cross_validate_indices]
+            Y_validate = training_labels[cross_validate_indices]
+
+            all_loss[i] = self.cross_validation_one_iteration(batch_size, X_train, X_validate, Y_train, Y_validate)
+
+        mean_loss = np.mean(all_loss)
+        return 
+    
+    def choosing_best_hyperparameters(self, training_data, training_labels, lamda_list, k):
+
+        model_performance = np.zeros((len(lamda_list), 1))
+
+        for lmda, i in enumerate(lamda_list, model_performance.shape[0]) :
+            model_performance[i] = self.global_cross_validation(k, training_data, training_labels)
+            # fonction à finir
 
 
     def fit(self, training_data, training_labels):
