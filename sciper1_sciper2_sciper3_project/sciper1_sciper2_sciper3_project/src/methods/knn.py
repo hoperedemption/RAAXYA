@@ -10,7 +10,7 @@ class KNN(object):
             Call set_arguments function of this class.
         """
         self.k = k
-        self.task_kind =task_kind
+        self.task_kind = task_kind
 
     # Some helper functions
     """
@@ -58,7 +58,7 @@ class KNN(object):
         return 1 / distances
 
     """
-    Decaing weighting function: inverse of the exp of the distances
+    Decaying weighting function: inverse of the exp of the distances
 
     Inputs:
         distances: (N, )

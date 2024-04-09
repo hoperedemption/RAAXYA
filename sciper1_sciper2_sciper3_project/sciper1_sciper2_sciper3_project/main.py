@@ -88,6 +88,20 @@ def main(args):
 
     xtest = zeros_test 
 
+    # Add the Kernel trick (experiment)
+
+    # Gaussian Kernel: Radial basis functions
+
+    def radial_basis_function(X, against, sigma):
+        X_diff = X[:, np.newaxis] - against
+        X_distances = np.linalg.norm(X_diff, axis=2) ** 2
+        X_kernel_radial = np.exp(-X_distances / (2 * sigma ** 2))
+        return X_kernel_radial
+
+    sigma = 1.0
+
+    xtrain_kernel = radial_basis_function(xtrain, xtrain, sigma)
+    xtest_kernel = radial_basis_function(xtest, xtrain, sigma)
     
     ## 3. Initialize the method you want to use.
 
@@ -106,8 +120,10 @@ def main(args):
             task = "classification"
         method_obj = KNN(args.K, task)
     elif args.method == "logistic_regression":
-
-        method_obj = LogisticRegression(args.lr, args.max_iters)
+        method_obj = LogisticRegression(0.001, 1000)
+    elif args.method == "linear_regression":
+        method_obj = LinearRegression(args.lmda)
+    
 
 
     ## 4. Train and evaluate the method

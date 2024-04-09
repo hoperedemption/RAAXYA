@@ -60,7 +60,9 @@ class LogisticRegression(object):
         """
         ### WRITE YOUR CODE HERE 
         # Hint: try to decompose the above formula in different steps to avoid recomputing the same things.
-        aux = np.exp(data @ W)
+        linear = data @ W
+        aux = np.exp(linear)
+
         sums = aux.sum(axis=1)
         result = aux / sums[:, np.newaxis]
         
@@ -115,7 +117,7 @@ class LogisticRegression(object):
 
         
         self.N, self.D, self.C = training_data.shape[0], training_data.shape[1], get_n_classes(training_labels)
-        # self.weights = np.random.normal(0, 1, (self.D, self.C)) * (1 / np.sqrt(self.D))
+        self.weights = np.random.normal(0, 1, (self.D, self.C)) * (1 / np.sqrt(self.D))
         # self.weights = np.random.normal(0, 2, (self.D, self.C)) * (1 / np.sqrt(self.D))
         print("D + C: " + str(self.D )+ "    " + str(self.C))
 
