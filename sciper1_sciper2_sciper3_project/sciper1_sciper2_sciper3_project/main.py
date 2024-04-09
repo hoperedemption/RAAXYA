@@ -88,6 +88,20 @@ def main(args):
 
     xtest = zeros_test 
 
+    # Add the Kernel trick (experiment)
+
+    # Gaussian Kernel: Radial basis functions
+
+    def radial_basis_function(X, against, sigma):
+        X_diff = X[:, np.newaxis] - against
+        X_distances = np.linalg.norm(X_diff, axis=2) ** 2
+        X_kernel_radial = np.exp(-X_distances / (2 * sigma ** 2))
+        return X_kernel_radial
+
+    sigma = 1.0
+
+    xtrain_kernel = radial_basis_function(xtrain, xtrain, sigma)
+    xtest_kernel = radial_basis_function(xtest, xtrain, sigma)
     
     ## 3. Initialize the method you want to use.
 

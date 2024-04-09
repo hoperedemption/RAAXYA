@@ -34,28 +34,47 @@ class LinearRegression(object):
         N = training_data.shape[0]
         D = training_data.shape[1]
 
-        weights = linalg.inv(X.T@X + self.lmda * np.eye(D)) @ X.T @ training_labels
-        self.w = weights
+        # weights = linalg.inv(X.T@X + self.lmda * np.eye(D)) @ X.T @ training_labels
+        weights = np.linalg.solve(X.T@X + self.lmda * np.eye(D), X.T @ training_labels)
+        self.weights = weights
         pred_regression_targets = training_data @ weights
 
         return pred_regression_targets
+    
+    def fit_with_kernel(self, kernel_data, training_labels):
+        K = kernel_data
+        N = kernel_data.shape[0]
+
+        # A = np.linalg.inv(K + self.lmda * np.eye(N)) @ training_labels
+        A = np.linalg.solve(K + self.lmda * np.eye(N), training_labels)
+        self.A = A 
+
+        pred_regression_targets = K @ A
+
+        return pred_regression_targets 
 
 
     def predict(self, test_data):
-            """
-                Runs prediction on the test data.
+        """
+            Runs prediction on the test data.
 
-                Arguments:
-                    test_data (np.array): test data of shape (N,D)
-                Returns:
-                    test_labels (np.array): labels of shape (N,regression_target_size)
-            """
-            ##
-            ###
-            #### YOUR CODE HERE!
-            ###
-            ##
+            Arguments:
+                test_data (np.array): test data of shape (N,D)
+            Returns:
+                test_labels (np.array): labels of shape (N,regression_target_size)
+        """
+        ##
+        ###
+        #### YOUR CODE HERE!
+        ###
+        ##
 
-            pred_regression_targets = test_data @ self.w
+        pred_regression_targets = test_data @ self.weights
 
-            return pred_regression_targets
+        return pred_regression_targets
+    
+
+    def predict_with_kernel(self, kernel_test_data):
+         pred_regression_targets = kernel_test_data @ self.A 
+
+         return pred_regression_targets 
