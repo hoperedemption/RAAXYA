@@ -1,4 +1,5 @@
 import numpy as np
+from utils import mse_fn
 
 class KNN(object):
     """
@@ -11,6 +12,9 @@ class KNN(object):
         """
         self.k = k
         self.task_kind = task_kind
+
+        self.distance_function = self.euclid_distance
+        self.weighting_fucntion = None
 
     # Some helper functions
     """
@@ -43,19 +47,25 @@ class KNN(object):
     def minkowski(self, target_vector, p=4):
         diff = self.training_vectors - target_vector.T
         sum_power_p_diff = np.sum(np.abs(diff) ** p, axis=1)
-        distances = sum_power_p_diff ** (1 / p);
-        return distances;
+        distances = sum_power_p_diff ** (1 / p)
+        return distances
 
     """
-    Simple weighting function: inverse of the distances 
+    Radial basis function
+
+    Computes all the kernel distances of one target vector with respect to all training vectors
 
     Inputs:
-        distances: (N, )
+        target_vector: (D, )
+        training_vectors: (N x D)
     Outputs:
-        inverse of the distances as weights
+        the radial kernel distance between a target vector and all training vectors
     """
-    def simple_weights(self, distances):
-        return 1 / distances
+    def radial_basis_function(self, target_vector, sigma):
+        training_diff = self.training_vectors - target_vector
+        training_distances = np.linalg.norm(training_diff, axis=1) ** 2
+        distances_kernel_radial = np.exp(-training_distances / (2 * sigma ** 2))
+        return distances_kernel_radial
 
     """
     Decaying weighting function: inverse of the exp of the distances
@@ -79,9 +89,9 @@ class KNN(object):
         the indices of the K samples with smallest distance   
     """
     def find_k_smallest(self, distances):
-        indices = np.argsort(distances, kind='quicksort');
+        indices = np.argsort(distances, kind='quicksort')
         return indices[:self.k]
-    
+
     """
     Majority vote
 
@@ -131,8 +141,8 @@ class KNN(object):
     Outputs:
         predicted label for the target vector
     """
-    def knn_one_step_target_vector(self, target_vector, distance_func):
-        distances = distance_func(target_vector)
+    def knn_one_step_target_vector(self, target_vector):
+        distances = self.distance_function(target_vector)
         indices = self.find_k_smallest(distances)
         k_nearest_labels = self.training_labels[indices]
 
@@ -155,8 +165,43 @@ class KNN(object):
         predicted labels for each target vector
     """
     def knn(self, target_vectors):
-        return np.apply_along_axis(self.knn_one_step_target_vector, 1, target_vectors, self.euclid_distance)
+        return np.apply_along_axis(self.knn_one_step_target_vector, 1, target_vectors)
         
+    def cross_validation_one_iteration(self, batch_size, X_train, X_validate, Y_train, Y_validate):
+        self.fit(X_train, Y_train)
+        Y_predicted = self.predict(X_validate)
+
+        loss = mse_fn(Y_predicted, Y_validate)
+        return loss
+        
+    def global_cross_validation(self, k, training_data, training_labels):
+        
+        N = training_data.shape[0]
+        D = training_data.shape[1]
+        batch_size = N//k
+
+        # voir plus tard pour le reste
+        random_X_indices = np.random.permutation(N)
+        all_loss = np.zeros((k + 1, 1))
+
+        for i in range(k + 1):
+            if i == k:
+                cross_validate_indices = random_X_indices[batch_size*k:]
+            else:
+                cross_validate_indices = random_X_indices[batch_size*i:batch_size*(i+1)]
+
+            training_indices = np.set1diff1d(random_X_indices, cross_validate_indices)
+
+            X_train = training_data[training_indices]
+            Y_train = training_labels[training_indices]
+
+            X_validate = training_data[cross_validate_indices]
+            Y_validate = training_labels[cross_validate_indices]
+
+            all_loss[i] = self.cross_validation_one_iteration(batch_size, X_train, X_validate, Y_train, Y_validate)
+
+        mean_loss = np.mean(all_loss)
+        return mean_loss
 
     def fit(self, training_data, training_labels):
         """

@@ -132,15 +132,7 @@ class LogisticRegression(object):
             all_loss[i] = self.cross_validation_one_iteration(batch_size, X_train, X_validate, Y_train, Y_validate)
 
         mean_loss = np.mean(all_loss)
-        return 
-    
-    def choosing_best_hyperparameters(self, training_data, training_labels, lamda_list, k):
-
-        model_performance = np.zeros((len(lamda_list), 1))
-
-        for lmda, i in enumerate(lamda_list, model_performance.shape[0]) :
-            model_performance[i] = self.global_cross_validation(k, training_data, training_labels)
-            # fonction à finir
+        return mean_loss
 
 
     def fit(self, training_data, training_labels):
@@ -161,14 +153,12 @@ class LogisticRegression(object):
 
         
         self.N, self.D, self.C = training_data.shape[0], training_data.shape[1], get_n_classes(training_labels)
-        self.weights = np.random.normal(0, 1, (self.D, self.C)) * (1 / np.sqrt(self.D))
+        # self.weights = np.random.normal(0, 1, (self.D, self.C)) * (1 / np.sqrt(self.D))
         # self.weights = np.random.normal(0, 2, (self.D, self.C)) * (1 / np.sqrt(self.D))
         print("D + C: " + str(self.D )+ "    " + str(self.C))
 
-        self.weights = np.random.normal(0, 0.1, (self.D, self.C))
+        self.weights = np.random.normal(0, self.sigma, (self.D, self.C))
         print("weight init: " + str(self.weights))
-
-        self.epsilon = 0.001
 
         labels = label_to_onehot(training_labels, self.C)
 
@@ -177,9 +167,9 @@ class LogisticRegression(object):
             self.weights = self.weights - self.lr * gradient   
                     
             predictions = self.logistic_regression_predict_multi(training_data, self.weights)
-            if (accuracy_fn(predictions, onehot_to_label(labels)) == 100) or (self.loss_logistic_multi(training_data, labels, self.weights) < self.epsilon):
+            if (accuracy_fn(predictions, onehot_to_label(labels)) == 100):
                 break
-            print(self.loss_logistic_multi(training_data, labels, self.weights))
+            # print(self.loss_logistic_multi(training_data, labels, self.weights))
 
         # print("final weights: ")
         # print(self.weights)

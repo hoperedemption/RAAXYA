@@ -114,59 +114,96 @@ def main(args):
         method_obj = DummyClassifier(arg1=1, arg2=2)
 
     elif args.method == "knn":
+        
         if args.task == "center_locating":
             task = "regression"
         elif args.task == "breed_identifying":
             task = "classification"
-        method_obj = KNN(args.K, task)
+        method_obj = KNN(1, task)
+        k = 10
+
+        if args.K == None :
+            
+            k_list = np.arange(1, 26)
+
+            distance_functions = [method_obj.euclid_distance, method_obj.minkowski, method_obj.radial_basis_function]
+
+            model_performance =  np.zeros((len(k_list), 3, 2))
+            
+            for i in k_list:
+                for j, f in enumerate(distance_functions):
+                    method_obj.distance_function = f
+                    method_obj.K = i
+                    method_obj.weighting_fucntion = None
+                    model_performance[i-1][j][0] = method_obj.global_cross_validation(k, xtrain, ctrain)
+                    method_obj.weighting_fucntion = method_obj.decaying_weights
+                    model_performance[i-1][j][1] = method_obj.global_cross_validation(k, xtrain, ctrain)
+
+            argmax = np.argmax(model_performance)
+            best_K = k_list[argmax // 6]
+            best_distance_function = distance_functions[(argmax % 6) // 2]
+            best_weights_function = None if argmax % 2 == 0 else method_obj.decaying_weights
+            method_obj.K = best_K
+            method_obj.distance_function = best_distance_function
+            method_obj.weighting_fucntion = best_weights_function
+
+        else:
+            method_obj = KNN(args.K, task)
+
     elif args.method == "logistic_regression":
-        method_obj = LogisticRegression(0.001, 1000)
+        method_obj = LogisticRegression(1, 1)
+        # Should we consider the case where only one hyperparameter is defined
+        if args.lr == None or args.max_iters == None: 
+            D = xtrain.shape[1]
+            #choosing_best_hyperparameters
+            
+            sigma_list = 10 ** np.arange(-3, 1) * (D)
+            index_list = np.arange(10) 
+            lr_list = 10 ** (index_list - 7)
+            max_iters_list = 500 * (index_list[::-1] + 1)
+            
+            model_performance = np.zeros((len(index_list), 1))
+
+            for index in index_list:
+                method_obj.lr = lr_list[index]
+                method_obj.max_iters = max_iters_list[index]
+                
+                model_performance[index] = method_obj.global_cross_validation(k, xtrain, ctrain)
+            
+            best_index = np.argmax(model_performance)
+            best_lr = lr_list[best_index]
+            best_max_iters = max_iters_list[best_index]
+
+            method_obj.lr = best_lr
+            method_obj.max_iters = best_max_iters
+
+            sigma_performance = np.zeros((len(sigma_list), 1))
+            for i, sigma in enumerate(sigma_list):
+                method_obj.sigma = sigma
+                sigma_performance[i] = method_obj.global_cross_validation(k, xtrain, ctrain)
+            
+            best_sigma = sigma_list[np.argmax(sigma_performance)]
+            method_obj.sigma = best_sigma
+        else:
+            method_obj = LogisticRegression(args.lr, args.max_iters)
+        
     elif args.method == "linear_regression":
-        method_obj = LinearRegression(args.lmda)
-    
-    def cross_validation_one_iteration(self, batch_size, X_train, X_validate, Y_train, Y_validate):
-        self.fit(X_train, Y_train)
-        Y_predicted = self.predict(X_validate)
+        method_obj = LinearRegression(1)
+        if args.lmda != None:
+            method_obj = LinearRegression(args.lmda)
+        else :
+            #choosing_best_hyperparameters
+            lambda_list = 10 ** np.arange(-10, 2)
+            model_performance = np.zeros((len(lambda_list), 1))
 
-        loss = mse_fn(Y_predicted, Y_validate)
-        return loss
+            for i, lmbda in enumerate(lambda_list):
+                method_obj.lmda = lmbda
+                model_performance[i] = method_obj.global_cross_validation(k, xtrain, ctrain)
+
+            best_lambda = lambda_list[np.argmax(model_performance)]
+            method_obj.lmda = best_lambda
         
-    def global_cross_validation(self, k, training_data, training_labels):
-        
-        N = training_data.shape[0]
-        D = training_data.shape[1]
-        batch_size = N//k
 
-        # voir plus tard pour le reste
-        random_X_indices = np.random.permutation(N)
-        all_loss = np.zeros((k + 1, 1))
-
-        for i in range(k + 1):
-            if i == k:
-                cross_validate_indices = random_X_indices[batch_size*k:]
-            else:
-                cross_validate_indices = random_X_indices[batch_size*i:batch_size*(i+1)]
-
-            training_indices = np.set1diff1d(random_X_indices, cross_validate_indices)
-
-            X_train = training_data[training_indices]
-            Y_train = training_labels[training_indices]
-
-            X_validate = training_data[cross_validate_indices]
-            Y_validate = training_labels[cross_validate_indices]
-
-            all_loss[i] = self.cross_validation_one_iteration(batch_size, X_train, X_validate, Y_train, Y_validate)
-
-        mean_loss = np.mean(all_loss)
-        return 
-    
-    def choosing_best_hyperparameters(self, training_data, training_labels, lamda_list, k):
-
-        model_performance = np.zeros((len(lamda_list), 1))
-
-        for lmda, i in enumerate(lamda_list, model_performance.shape[0]) :
-            model_performance[i] = self.global_cross_validation(k, training_data, training_labels)
-            # fonction à finir
 
 
     ## 4. Train and evaluate the method
