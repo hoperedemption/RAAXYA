@@ -1,5 +1,5 @@
 import numpy as np
-from utils import mse_fn
+from ..utils import *
 
 class KNN(object):
     """
@@ -61,7 +61,7 @@ class KNN(object):
     Outputs:
         the radial kernel distance between a target vector and all training vectors
     """
-    def radial_basis_function(self, target_vector, sigma):
+    def radial_basis_function(self, target_vector, sigma=1):
         training_diff = self.training_vectors - target_vector
         training_distances = np.linalg.norm(training_diff, axis=1) ** 2
         distances_kernel_radial = np.exp(-training_distances / (2 * sigma ** 2))
@@ -165,7 +165,8 @@ class KNN(object):
         predicted labels for each target vector
     """
     def knn(self, target_vectors):
-        return np.apply_along_axis(self.knn_one_step_target_vector, 1, target_vectors)
+        print(target_vectors.shape)
+        return np.apply_along_axis(func1d=self.knn_one_step_target_vector, axis=1, arr=target_vectors)
         
     def cross_validation_one_iteration(self, batch_size, X_train, X_validate, Y_train, Y_validate):
         self.fit(X_train, Y_train)
@@ -187,10 +188,11 @@ class KNN(object):
         for i in range(k + 1):
             if i == k:
                 cross_validate_indices = random_X_indices[batch_size*k:]
+                if cross_validate_indices.shape[0] == 0: break
             else:
                 cross_validate_indices = random_X_indices[batch_size*i:batch_size*(i+1)]
 
-            training_indices = np.set1diff1d(random_X_indices, cross_validate_indices)
+            training_indices = np.setdiff1d(random_X_indices, cross_validate_indices)
 
             X_train = training_data[training_indices]
             Y_train = training_labels[training_indices]

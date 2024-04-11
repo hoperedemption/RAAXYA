@@ -97,6 +97,7 @@ class LogisticRegression(object):
         """
         self.lr = lr
         self.max_iters = max_iters
+        self.sigma = 1
 
     def cross_validation_one_iteration(self, batch_size, X_train, X_validate, Y_train, Y_validate):
         self.fit(X_train, Y_train)
@@ -121,7 +122,7 @@ class LogisticRegression(object):
             else:
                 cross_validate_indices = random_X_indices[batch_size*i:batch_size*(i+1)]
 
-            training_indices = np.set1diff1d(random_X_indices, cross_validate_indices)
+            training_indices = np.setdiff1d(random_X_indices, cross_validate_indices)
 
             X_train = training_data[training_indices]
             Y_train = training_labels[training_indices]
@@ -152,7 +153,11 @@ class LogisticRegression(object):
         ##
 
         
+
+        
         self.N, self.D, self.C = training_data.shape[0], training_data.shape[1], get_n_classes(training_labels)
+
+        
         # self.weights = np.random.normal(0, 1, (self.D, self.C)) * (1 / np.sqrt(self.D))
         # self.weights = np.random.normal(0, 2, (self.D, self.C)) * (1 / np.sqrt(self.D))
         print("D + C: " + str(self.D )+ "    " + str(self.C))
@@ -164,7 +169,7 @@ class LogisticRegression(object):
 
         for i in range(self.max_iters):
             gradient = self.gradient_logistic_multi(training_data, labels, self.weights)
-            self.weights = self.weights - self.lr * gradient   
+            self.weights = self.weights - self.lr * gradient
                     
             predictions = self.logistic_regression_predict_multi(training_data, self.weights)
             if (accuracy_fn(predictions, onehot_to_label(labels)) == 100):

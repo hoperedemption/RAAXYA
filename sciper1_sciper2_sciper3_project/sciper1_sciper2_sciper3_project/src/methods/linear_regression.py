@@ -1,7 +1,7 @@
 import numpy as np
 import sys
 import numpy.linalg as linalg
-from utils import *
+from ..utils import *
 
 class LinearRegression(object):
     """
@@ -77,7 +77,7 @@ class LinearRegression(object):
             else:
                 cross_validate_indices = random_X_indices[batch_size*i:batch_size*(i+1)]
 
-            training_indices = np.set1diff1d(random_X_indices, cross_validate_indices)
+            training_indices = np.setdiff1d(random_X_indices, cross_validate_indices)
 
             X_train = training_data[training_indices]
             Y_train = training_labels[training_indices]

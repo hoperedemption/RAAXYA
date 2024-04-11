@@ -105,6 +105,7 @@ def main(args):
     
     ## 3. Initialize the method you want to use.
 
+    k = 2
     # Use NN (FOR MS2!)
     if args.method == "nn":
         raise NotImplementedError("This will be useful for MS2.")
@@ -112,15 +113,15 @@ def main(args):
     # Follow the "DummyClassifier" example for your methods
     if args.method == "dummy_classifier":
         method_obj = DummyClassifier(arg1=1, arg2=2)
-
     elif args.method == "knn":
         
         if args.task == "center_locating":
             task = "regression"
+            train = ctrain
         elif args.task == "breed_identifying":
             task = "classification"
+            train = ytrain
         method_obj = KNN(1, task)
-        k = 10
 
         if args.K == None :
             
@@ -135,9 +136,9 @@ def main(args):
                     method_obj.distance_function = f
                     method_obj.K = i
                     method_obj.weighting_fucntion = None
-                    model_performance[i-1][j][0] = method_obj.global_cross_validation(k, xtrain, ctrain)
+                    model_performance[i-1][j][0] = method_obj.global_cross_validation(k, xtrain, train)
                     method_obj.weighting_fucntion = method_obj.decaying_weights
-                    model_performance[i-1][j][1] = method_obj.global_cross_validation(k, xtrain, ctrain)
+                    model_performance[i-1][j][1] = method_obj.global_cross_validation(k, xtrain, train)
 
             argmax = np.argmax(model_performance)
             best_K = k_list[argmax // 6]
@@ -151,24 +152,35 @@ def main(args):
             method_obj = KNN(args.K, task)
 
     elif args.method == "logistic_regression":
+        print("I AM A CRAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBb")
         method_obj = LogisticRegression(1, 1)
+        print("---------------------------------------")
+        print(args.max_iters)
+        print("---------------------------------------")
+        print(args.lr)
+        print("---------------------------------------")
         # Should we consider the case where only one hyperparameter is defined
         if args.lr == None or args.max_iters == None: 
+            #print("We are in crosss validation ------------------------------------------------------------")
+            #print("AMMMMMMMMMMMMMMMMMOOOOOOOOOOOOOOOOOGGGGGGGGGGGGGGGGGGGGGGGGUUUUUUUUUUUUSSSSSSSSSSSS")
             D = xtrain.shape[1]
             #choosing_best_hyperparameters
             
-            sigma_list = 10 ** np.arange(-3, 1) * (D)
+            sigma_list = np.float_power(10, np.arange(-3, 1) / np.sqrt(D))
             index_list = np.arange(10) 
-            lr_list = 10 ** (index_list - 7)
+            lr_list = np.float_power(10,  (index_list - 7))
             max_iters_list = 500 * (index_list[::-1] + 1)
             
             model_performance = np.zeros((len(index_list), 1))
 
             for index in index_list:
+                print("----------------------------------------------------------------------------")
+                print(f"Iteration number in index_list is {index}")
+                print("----------------------------------------------------------------------------")
                 method_obj.lr = lr_list[index]
                 method_obj.max_iters = max_iters_list[index]
                 
-                model_performance[index] = method_obj.global_cross_validation(k, xtrain, ctrain)
+                model_performance[index] = method_obj.global_cross_validation(k, xtrain, ytrain)
             
             best_index = np.argmax(model_performance)
             best_lr = lr_list[best_index]
@@ -179,8 +191,11 @@ def main(args):
 
             sigma_performance = np.zeros((len(sigma_list), 1))
             for i, sigma in enumerate(sigma_list):
+                print("----------------------------------------------------------------------------")
+                print(f"Iteration number in sigma_list is {i}")
+                print("----------------------------------------------------------------------------")
                 method_obj.sigma = sigma
-                sigma_performance[i] = method_obj.global_cross_validation(k, xtrain, ctrain)
+                sigma_performance[i] = method_obj.global_cross_validation(k, xtrain, ytrain)
             
             best_sigma = sigma_list[np.argmax(sigma_performance)]
             method_obj.sigma = best_sigma
@@ -193,10 +208,13 @@ def main(args):
             method_obj = LinearRegression(args.lmda)
         else :
             #choosing_best_hyperparameters
-            lambda_list = 10 ** np.arange(-10, 2)
+            lambda_list = np.float_power(10, np.arange(-10, 2))
             model_performance = np.zeros((len(lambda_list), 1))
 
             for i, lmbda in enumerate(lambda_list):
+                print("----------------------------------------------------------------------------")
+                print(f"Iteration number in lmbda_list is {i}")
+                print("----------------------------------------------------------------------------")
                 method_obj.lmda = lmbda
                 model_performance[i] = method_obj.global_cross_validation(k, xtrain, ctrain)
 
@@ -252,12 +270,12 @@ if __name__ == '__main__':
     parser.add_argument('--method', default="dummy_classifier", type=str, help="dummy_classifier / knn / linear_regression/ logistic_regression / nn (MS2)")
     parser.add_argument('--data_path', default="data", type=str, help="path to your dataset")
     parser.add_argument('--data_type', default="features", type=str, help="features/original(MS2)")
-    parser.add_argument('--lmda', type=float, default=10, help="lambda of linear/ridge regression")
-    parser.add_argument('--K', type=int, default=1, help="number of neighboring datapoints used for knn")
-    parser.add_argument('--lr', type=float, default=1e-5, help="learning rate for methods with learning rate")
-    parser.add_argument('--max_iters', type=int, default=100, help="max iters for methods which are iterative")
+    parser.add_argument('--lmda', type=float, default=None, help="lambda of linear/ridge regression")
+    parser.add_argument('--K', type=int, default=None, help="number of neighboring datapoints used for knn")
+    parser.add_argument('--lr', type=float, default=None, help="learning rate for methods with learning rate")
+    parser.add_argument('--max_iters', type=int, default=None, help="max iters for methods which are iterative")
     parser.add_argument('--test', action="store_true", help="train on whole training data and evaluate on the test data, otherwise use a validation set")
-
+    # TODO Change back to original vaclues after asking question
 
     # Feel free to add more arguments here if you need!
 
