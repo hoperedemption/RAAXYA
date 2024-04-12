@@ -106,6 +106,7 @@ def main(args):
     ## 3. Initialize the method you want to use.
 
     k = 5
+
     # Use NN (FOR MS2!)
     if args.method == "nn":
         raise NotImplementedError("This will be useful for MS2.")
@@ -124,7 +125,7 @@ def main(args):
         
         method_obj = KNN(1, task)
 
-        if args.K == None :
+        if args.k_fold == True :
             
             k_list = np.arange(1, 26)
 
@@ -167,7 +168,7 @@ def main(args):
         print(args.lr)
         print("---------------------------------------")
         # Should we consider the case where only one hyperparameter is defined
-        if args.lr == None or args.max_iters == None: 
+        if args.k_fold == True: 
             print("---------------------------------------We are in crosss validation ----------------------------------------")
             D = xtrain.shape[1]
             #choosing_best_hyperparameters
@@ -214,33 +215,11 @@ def main(args):
             print(f"best_sigma: {best_sigma}")
             print("------------ Results ----------------")
         else:
+            print("---------------------------We are not in cross validation --------------------------------------------------")
             method_obj = LogisticRegression(args.lr, args.max_iters)
         
     elif args.method == "linear_regression":
-        method_obj = LinearRegression(1)
-        if args.lmda != None:
-            method_obj = LinearRegression(args.lmda)
-        else :
-            #choosing_best_hyperparameters
-            lambda_list = np.float_power(10, np.arange(-10, 3))
-            model_performance = np.zeros((len(lambda_list), 1))
-
-            for i, lmbda in enumerate(lambda_list):
-                print("----------------------------------------------------------------------------")
-                print(f"Iteration number in lmbda_list is {i}")
-                print("----------------------------------------------------------------------------")
-                method_obj.lmda = lmbda
-                model_performance[i] = method_obj.global_cross_validation(k, xtrain, ctrain)
-
-            best_lambda = lambda_list[np.argmin(model_performance)]
-            method_obj.lmda = best_lambda
-
-            print("------------ Results ----------------")
-            print(f"model_performance: {model_performance}")
-            print(f"best_lambda: {best_lambda}")
-            print("------------ Results ----------------")
-
-            # kernel?
+        if args.with_kernel == True : 
             print("------------ Kernel ----------------")
             training_predictions = method_obj.fit_with_kernel(xtrain_kernel, ctrain)
             mse_loss_with_kernel_trainings = mse_fn(training_predictions, ctrain)
@@ -252,7 +231,29 @@ def main(args):
 
             print(f"mse_loss_with_kernel_testing: {mse_loss_with_kernel_testing}")
             print("------------ Kernel ----------------")
-        
+        else:
+            method_obj = LinearRegression(1)
+            if args.k_fold == False:
+                method_obj = LinearRegression(args.lmda)
+            else :
+                #choosing_best_hyperparameters
+                lambda_list = np.float_power(10, np.arange(-10, 3))
+                model_performance = np.zeros((len(lambda_list), 1))
+
+                for i, lmbda in enumerate(lambda_list):
+                    print("----------------------------------------------------------------------------")
+                    print(f"Iteration number in lmbda_list is {i}")
+                    print("----------------------------------------------------------------------------")
+                    method_obj.lmda = lmbda
+                    model_performance[i] = method_obj.global_cross_validation(k, xtrain, ctrain)
+
+                best_lambda = lambda_list[np.argmin(model_performance)]
+                method_obj.lmda = best_lambda
+
+                print("------------ Results ----------------")
+                print(f"model_performance: {model_performance}")
+                print(f"best_lambda: {best_lambda}")
+                print("------------ Results ----------------")
 
 
 
@@ -307,6 +308,8 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=None, help="learning rate for methods with learning rate")
     parser.add_argument('--max_iters', type=int, default=None, help="max iters for methods which are iterative")
     parser.add_argument('--test', action="store_true", help="train on whole training data and evaluate on the test data, otherwise use a validation set")
+    parser.add_argument("--k_fold", action="store_true")
+    parser.add_argument("--with_kernel", action="store_true")
     # TODO Change back to original vaclues after asking question
 
     # Feel free to add more arguments here if you need!
