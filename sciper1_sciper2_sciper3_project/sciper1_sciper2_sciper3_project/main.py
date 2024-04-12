@@ -105,7 +105,7 @@ def main(args):
     
     ## 3. Initialize the method you want to use.
 
-    k = 2
+    k = 5
     # Use NN (FOR MS2!)
     if args.method == "nn":
         raise NotImplementedError("This will be useful for MS2.")
@@ -121,6 +121,7 @@ def main(args):
         elif args.task == "breed_identifying":
             task = "classification"
             train = ytrain
+        
         method_obj = KNN(1, task)
 
         if args.K == None :
@@ -140,19 +141,25 @@ def main(args):
                     method_obj.weighting_fucntion = method_obj.decaying_weights
                     model_performance[i-1][j][1] = method_obj.global_cross_validation(k, xtrain, train)
 
-            argmax = np.argmax(model_performance)
-            best_K = k_list[argmax // 6]
-            best_distance_function = distance_functions[(argmax % 6) // 2]
-            best_weights_function = None if argmax % 2 == 0 else method_obj.decaying_weights
+            argmin = np.argmin(model_performance)
+            best_K = k_list[argmin // 6]
+            best_distance_function = distance_functions[(argmin % 6) // 2]
+            best_weighting_function = None if argmin % 2 == 0 else method_obj.decaying_weights
             method_obj.K = best_K
             method_obj.distance_function = best_distance_function
-            method_obj.weighting_fucntion = best_weights_function
+            method_obj.weighting_fucntion = best_weighting_function
 
+            print("------------ Results ----------------")
+            print(f"model_performance: {model_performance}")
+            print(f"argmin: {argmin}")
+            print(f"best_K: {best_K}")
+            print(f"best_distance_function: {best_distance_function}")
+            print(f"best_weighting_function: {best_weighting_function}")
+            print("------------ Results ----------------")
         else:
             method_obj = KNN(args.K, task)
 
     elif args.method == "logistic_regression":
-        print("I AM A CRAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBb")
         method_obj = LogisticRegression(1, 1)
         print("---------------------------------------")
         print(args.max_iters)
@@ -161,14 +168,13 @@ def main(args):
         print("---------------------------------------")
         # Should we consider the case where only one hyperparameter is defined
         if args.lr == None or args.max_iters == None: 
-            #print("We are in crosss validation ------------------------------------------------------------")
-            #print("AMMMMMMMMMMMMMMMMMOOOOOOOOOOOOOOOOOGGGGGGGGGGGGGGGGGGGGGGGGUUUUUUUUUUUUSSSSSSSSSSSS")
+            print("---------------------------------------We are in crosss validation ----------------------------------------")
             D = xtrain.shape[1]
             #choosing_best_hyperparameters
             
-            sigma_list = np.float_power(10, np.arange(-3, 1) / np.sqrt(D))
-            index_list = np.arange(10) 
-            lr_list = np.float_power(10,  (index_list - 7))
+            sigma_list = np.float_power(10, np.arange(-3, 2))
+            index_list = np.arange(12) 
+            lr_list = np.float_power(10,  (index_list - 9))
             max_iters_list = 500 * (index_list[::-1] + 1)
             
             model_performance = np.zeros((len(index_list), 1))
@@ -182,10 +188,9 @@ def main(args):
                 
                 model_performance[index] = method_obj.global_cross_validation(k, xtrain, ytrain)
             
-            best_index = np.argmax(model_performance)
+            best_index = np.argmin(model_performance)
             best_lr = lr_list[best_index]
             best_max_iters = max_iters_list[best_index]
-
             method_obj.lr = best_lr
             method_obj.max_iters = best_max_iters
 
@@ -197,8 +202,17 @@ def main(args):
                 method_obj.sigma = sigma
                 sigma_performance[i] = method_obj.global_cross_validation(k, xtrain, ytrain)
             
-            best_sigma = sigma_list[np.argmax(sigma_performance)]
+            best_sigma = sigma_list[np.argmin(sigma_performance)]
             method_obj.sigma = best_sigma
+
+            print("------------ Results ----------------")
+            print(f"model_performance: {model_performance}")
+            print(f"best_index: {best_index}")
+            print(f"best_lr: {best_lr}")
+            print(f"best_max_iters: {best_max_iters}")
+            print(f"sigma_performance: {sigma_performance}")
+            print(f"best_sigma: {best_sigma}")
+            print("------------ Results ----------------")
         else:
             method_obj = LogisticRegression(args.lr, args.max_iters)
         
@@ -208,7 +222,7 @@ def main(args):
             method_obj = LinearRegression(args.lmda)
         else :
             #choosing_best_hyperparameters
-            lambda_list = np.float_power(10, np.arange(-10, 2))
+            lambda_list = np.float_power(10, np.arange(-10, 3))
             model_performance = np.zeros((len(lambda_list), 1))
 
             for i, lmbda in enumerate(lambda_list):
@@ -218,8 +232,26 @@ def main(args):
                 method_obj.lmda = lmbda
                 model_performance[i] = method_obj.global_cross_validation(k, xtrain, ctrain)
 
-            best_lambda = lambda_list[np.argmax(model_performance)]
+            best_lambda = lambda_list[np.argmin(model_performance)]
             method_obj.lmda = best_lambda
+
+            print("------------ Results ----------------")
+            print(f"model_performance: {model_performance}")
+            print(f"best_lambda: {best_lambda}")
+            print("------------ Results ----------------")
+
+            # kernel?
+            print("------------ Kernel ----------------")
+            training_predictions = method_obj.fit_with_kernel(xtrain_kernel, ctrain)
+            mse_loss_with_kernel_trainings = mse_fn(training_predictions, ctrain)
+
+            print(f"mse_loss_with_kernel_trainings: {mse_loss_with_kernel_trainings}")
+
+            testing_predictions = method_obj.predict_with_kernel(xtest_kernel)
+            mse_loss_with_kernel_testing = mse_fn(testing_predictions, ctest)
+
+            print(f"mse_loss_with_kernel_testing: {mse_loss_with_kernel_testing}")
+            print("------------ Kernel ----------------")
         
 
 

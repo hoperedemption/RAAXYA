@@ -42,55 +42,6 @@ class LinearRegression(object):
 
         return pred_regression_targets
     
-    def fit_with_kernel(self, kernel_data, training_labels):
-        K = kernel_data
-        N = kernel_data.shape[0]
-
-        # A = np.linalg.inv(K + self.lmda * np.eye(N)) @ training_labels
-        A = np.linalg.solve(K + self.lmda * np.eye(N), training_labels)
-        self.A = A 
-
-        pred_regression_targets = K @ A
-
-        return pred_regression_targets 
-    
-    def cross_validation_one_iteration(self, batch_size, X_train, X_validate, Y_train, Y_validate):
-        self.fit(X_train, Y_train)
-        Y_predicted = self.predict(X_validate)
-
-        loss = mse_fn(Y_predicted, Y_validate)
-        return loss
-        
-    def global_cross_validation(self, k, training_data, training_labels):
-        
-        N = training_data.shape[0]
-        D = training_data.shape[1]
-        batch_size = N//k
-
-        # voir plus tard pour le reste
-        random_X_indices = np.random.permutation(N)
-        all_loss = np.zeros((k + 1, 1))
-
-        for i in range(k + 1):
-            if i == k:
-                cross_validate_indices = random_X_indices[batch_size*k:]
-            else:
-                cross_validate_indices = random_X_indices[batch_size*i:batch_size*(i+1)]
-
-            training_indices = np.setdiff1d(random_X_indices, cross_validate_indices)
-
-            X_train = training_data[training_indices]
-            Y_train = training_labels[training_indices]
-
-            X_validate = training_data[cross_validate_indices]
-            Y_validate = training_labels[cross_validate_indices]
-
-            all_loss[i] = self.cross_validation_one_iteration(batch_size, X_train, X_validate, Y_train, Y_validate)
-
-        mean_loss = np.mean(all_loss)
-        return mean_loss
-
-
     def predict(self, test_data):
         """
             Runs prediction on the test data.
@@ -110,8 +61,61 @@ class LinearRegression(object):
 
         return pred_regression_targets
     
+    
+    def fit_with_kernel(self, kernel_data, training_labels):
+        K = kernel_data
+        N = kernel_data.shape[0]
+
+        # A = np.linalg.inv(K + self.lmda * np.eye(N)) @ training_labels
+        A = np.linalg.solve(K + self.lmda * np.eye(N), training_labels)
+        self.A = A 
+
+        pred_regression_targets = K @ A
+
+        return pred_regression_targets 
+
 
     def predict_with_kernel(self, kernel_test_data):
          pred_regression_targets = kernel_test_data @ self.A 
 
          return pred_regression_targets 
+
+
+    def cross_validation_one_iteration(self, batch_size, X_train, X_validate, Y_train, Y_validate):
+        self.fit(X_train, Y_train)
+        Y_predicted = self.predict(X_validate)
+
+        loss = mse_fn(Y_predicted, Y_validate)
+        return loss
+        
+    def global_cross_validation(self, k, training_data, training_labels):
+        
+        N = training_data.shape[0]
+        D = training_data.shape[1]
+        batch_size = N//k
+
+        # voir plus tard pour le reste
+        random_X_indices = np.random.permutation(N)
+        all_loss = np.zeros((k, 1))
+
+        for i in range(k + 1):
+            if i == k:
+                cross_validate_indices = random_X_indices[batch_size*k:]
+                print(cross_validate_indices)
+                if cross_validate_indices.shape[0] == 0: break 
+                else: np.append(all_loss, 0)
+            else:
+                cross_validate_indices = random_X_indices[batch_size*i:batch_size*(i+1)]
+
+            training_indices = np.setdiff1d(random_X_indices, cross_validate_indices)
+
+            X_train = training_data[training_indices]
+            Y_train = training_labels[training_indices]
+
+            X_validate = training_data[cross_validate_indices]
+            Y_validate = training_labels[cross_validate_indices]
+
+            all_loss[i] = self.cross_validation_one_iteration(batch_size, X_train, X_validate, Y_train, Y_validate)
+
+        mean_loss = np.mean(all_loss)
+        return mean_loss

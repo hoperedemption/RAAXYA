@@ -165,7 +165,6 @@ class KNN(object):
         predicted labels for each target vector
     """
     def knn(self, target_vectors):
-        print(target_vectors.shape)
         return np.apply_along_axis(func1d=self.knn_one_step_target_vector, axis=1, arr=target_vectors)
         
     def cross_validation_one_iteration(self, batch_size, X_train, X_validate, Y_train, Y_validate):

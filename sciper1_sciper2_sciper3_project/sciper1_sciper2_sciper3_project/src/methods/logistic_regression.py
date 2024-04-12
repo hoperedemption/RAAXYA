@@ -114,11 +114,14 @@ class LogisticRegression(object):
 
         # voir plus tard pour le reste
         random_X_indices = np.random.permutation(N)
-        all_loss = np.zeros((k + 1, 1))
+        all_loss = np.zeros((k, 1))
 
         for i in range(k + 1):
             if i == k:
                 cross_validate_indices = random_X_indices[batch_size*k:]
+                print(cross_validate_indices)
+                if cross_validate_indices.shape[0] == 0: break 
+                else: np.append(all_loss, 0)
             else:
                 cross_validate_indices = random_X_indices[batch_size*i:batch_size*(i+1)]
 
@@ -151,10 +154,6 @@ class LogisticRegression(object):
         #### WRITE YOUR CODE HERE!
         ###
         ##
-
-        
-
-        
         self.N, self.D, self.C = training_data.shape[0], training_data.shape[1], get_n_classes(training_labels)
 
         
@@ -167,13 +166,34 @@ class LogisticRegression(object):
 
         labels = label_to_onehot(training_labels, self.C)
 
+        # self.epsilon = 0.01
+        # accuracy_prev = 0
         for i in range(self.max_iters):
             gradient = self.gradient_logistic_multi(training_data, labels, self.weights)
             self.weights = self.weights - self.lr * gradient
                     
             predictions = self.logistic_regression_predict_multi(training_data, self.weights)
-            if (accuracy_fn(predictions, onehot_to_label(labels)) == 100):
+
+            accuracy = accuracy_fn(predictions, onehot_to_label(labels))
+
+            # print(f"Iteration {i} gives acc: {accuracy}")
+            # print(f"lr, gradient at iteration {i}: {np.mean(self.lr * gradient)}")
+            # while accuracy - accuracy_prev < self.epsilon and accuracy - accuracy_prev >= 0:
+            #     self.weights = self.weights - self.lr * gradient
+            #     accuracy = accuracy_fn(predictions, onehot_to_label(labels))
+            #     print(f"Iteration {i} gives acc: {accuracy}")
+
+            # if accuracy < accuracy_prev:
+            #     self.weights = self.weights + self.lr * gradient
+            #     self.lr /= 10
+            # elif accuracy - accuracy_prev < self.epsilon: 
+            #     self.lr *= 10 
+            #     self.weights = self.weights - self.lr * gradient
+            
+            if (accuracy == 100):
                 break
+
+            # accuracy_prev = accuracy
             # print(self.loss_logistic_multi(training_data, labels, self.weights))
 
         # print("final weights: ")
