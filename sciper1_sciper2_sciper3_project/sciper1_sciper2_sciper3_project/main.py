@@ -10,6 +10,7 @@ from src.methods.knn import KNN
 from src.utils import normalize_fn, append_bias_term, accuracy_fn, macrof1_fn, mse_fn
 import os
 np.random.seed(100)
+import matplotlib.pyplot as plt
 
 
 def main(args):
@@ -142,17 +143,17 @@ def main(args):
                     method_obj.weighting_fucntion = method_obj.decaying_weights
                     model_performance[i-1][j][1] = method_obj.global_cross_validation(k, xtrain, train)
 
-            argmin = np.argmin(model_performance)
-            best_K = k_list[argmin // 6]
-            best_distance_function = distance_functions[(argmin % 6) // 2]
-            best_weighting_function = None if argmin % 2 == 0 else method_obj.decaying_weights
+            argmins = np.sort(model_performance)[:2]
+            best_K = k_list[argmins // 6]
+            best_distance_function = distance_functions[(argmins % 6) // 2]
+            best_weighting_function = None if argmins % 2 == 0 else method_obj.decaying_weights
             method_obj.K = best_K
             method_obj.distance_function = best_distance_function
             method_obj.weighting_fucntion = best_weighting_function
 
             print("------------ Results ----------------")
             print(f"model_performance: {model_performance}")
-            print(f"argmin: {argmin}")
+            print(f"argmins: {argmins}")
             print(f"best_K: {best_K}")
             print(f"best_distance_function: {best_distance_function}")
             print(f"best_weighting_function: {best_weighting_function}")
@@ -246,7 +247,7 @@ def main(args):
                     print("----------------------------------------------------------------------------")
                     method_obj.lmda = lmbda
                     model_performance[i] = method_obj.global_cross_validation(k, xtrain, ctrain)
-
+                    
                 best_lambda = lambda_list[np.argmin(model_performance)]
                 method_obj.lmda = best_lambda
 
@@ -254,6 +255,11 @@ def main(args):
                 print(f"model_performance: {model_performance}")
                 print(f"best_lambda: {best_lambda}")
                 print("------------ Results ----------------")
+
+                plt.title("Performance of the model according lambda")
+                plt.plot(np.log10(lambda_list), model_performance)
+                plt.show()
+                plt.savefig("performace.png")
 
 
 
@@ -284,7 +290,7 @@ def main(args):
         ## Report results: performance on train and valid/test sets
         acc = accuracy_fn(preds_train, ytrain)
         macrof1 = macrof1_fn(preds_train, ytrain)
-        print(f"\nTrain set: accuracy = {acc:.3f}% - F1-score = {macrof1:.6f}")
+        print(f"\nTrain setpython -m pip install -U matplotlib: accuracy = {acc:.3f}% - F1-score = {macrof1:.6f}")
 
         acc = accuracy_fn(preds, ytest)
         macrof1 = macrof1_fn(preds, ytest)
@@ -322,3 +328,7 @@ if __name__ == '__main__':
     # which can be accessed as "args.data", for example.
     args = parser.parse_args()
     main(args)
+
+
+
+

@@ -35,8 +35,10 @@ class LinearRegression(object):
         N = training_data.shape[0]
         D = training_data.shape[1]
 
-        # weights = linalg.inv(X.T@X + self.lmda * np.eye(D)) @ X.T @ training_labels
-        weights = np.linalg.solve(X.T@X + self.lmda * np.eye(D), X.T @ training_labels)
+        if self.lmda == 0:
+            weights = np.linalg.pinv(X) @ training_labels
+        else:
+            weights = np.linalg.solve(X.T@X + self.lmda * np.eye(D), X.T @ training_labels)
         self.weights = weights
         pred_regression_targets = training_data @ weights
 
@@ -66,8 +68,10 @@ class LinearRegression(object):
         K = kernel_data
         N = kernel_data.shape[0]
 
-        # A = np.linalg.inv(K + self.lmda * np.eye(N)) @ training_labels
-        A = np.linalg.solve(K + self.lmda * np.eye(N), training_labels)
+        if self.lmda == 0:
+            A = np.linalg.pinv(K) @ training_labels
+        else:
+            A = np.linalg.solve(K + self.lmda * np.eye(N), training_labels)
         self.A = A 
 
         pred_regression_targets = K @ A
