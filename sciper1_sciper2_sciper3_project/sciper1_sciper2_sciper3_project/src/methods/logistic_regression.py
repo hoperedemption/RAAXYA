@@ -126,6 +126,7 @@ class LogisticRegression(object):
                 cross_validate_indices = random_X_indices[batch_size*i:batch_size*(i+1)]
 
             training_indices = np.setdiff1d(random_X_indices, cross_validate_indices)
+            # Hello
 
             X_train = training_data[training_indices]
             Y_train = training_labels[training_indices]
