@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..utils import get_n_classes, label_to_onehot, onehot_to_label, accuracy_fn, mse_fn
+from ..utils import get_n_classes, label_to_onehot, onehot_to_label, accuracy_fn, mse_fn, macrof1_fn
 
 
 class LogisticRegression(object):
@@ -105,7 +105,7 @@ class LogisticRegression(object):
         self.fit(X_train, Y_train)
         Y_predicted = self.predict(X_validate)
 
-        loss = mse_fn(Y_predicted, Y_validate)
+        loss = macrof1_fn(Y_predicted, Y_validate)
         return loss
         
     def global_cross_validation(self, k, training_data, training_labels):

@@ -192,6 +192,33 @@ def main(args):
             # ax.set_yticks(yticks)
 
             # plt.show()
+
+            list_distances = ["(euclid, indentity)", "(euclid, decaying)",  "(min, indentity)", "(min, decaying)", "(decaying, indentity)", "(decaying, decaying)"]
+
+            # setup the figure and axes
+            fig = plt.figure(figsize=(8, 3))
+            ax1 = fig.add_subplot(121, projection='3d')
+
+            # fake data
+            x = np.arange(len(list_distances))
+            y = np.arange(len(k_list))
+
+            _xx, _yy = np.meshgrid(x, y)
+            XX, YY = _xx.ravel(), _yy.ravel()
+
+            dx = np.ones(len(XX))
+            dy = np.ones(len(YY))
+
+            top = model_performance.ravel()
+            bottom = np.zeros_like(top)
+
+            ax1.bar3d(x, y, bottom, dx, dy, top, shade=True)
+            ax1.set_title('Shaded')
+
+            ax1.set_xticks(range(0, 12, 2))
+            ax1.set_xticklabels(_xx[:])
+
+            plt.show()  
         else:
             method_obj = KNN(args.K, task)
 
@@ -228,7 +255,8 @@ def main(args):
                 
                 model_performance[index] = method_obj.global_cross_validation(k, xtrain, ytrain)
             
-            best_index = np.argmin(model_performance)
+            print("Model performance : ", model_performance)
+            best_index = np.argmax(model_performance)
             best_lr = lr_list[best_index]
             best_max_iters = max_iters_list[best_index]
             method_obj.lr = best_lr
@@ -242,7 +270,7 @@ def main(args):
                 method_obj.sigma = sigma
                 sigma_performance[i] = method_obj.global_cross_validation(k, xtrain, ytrain)
             
-            best_sigma = sigma_list[np.argmin(sigma_performance)]
+            best_sigma = sigma_list[np.argmax(sigma_performance)]
             method_obj.sigma = best_sigma
 
             print("------------ Results ----------------")
@@ -269,29 +297,29 @@ def main(args):
 
             
 
-            # import pandas as pd
+            import pandas as pd
 
-            # plotdata = pd.DataFrame({
+            plotdata = pd.DataFrame({
 
-            #     "tuples": model_performance},
+                "tuples": model_performance},
 
-            #     index= map(str, L))
+                index= map(str, L))
 
-            # plotdata.plot(kind="bar",figsize=(15, 15))
+            plotdata.plot(kind="bar",figsize=(15, 15))
 
-            # plt.title("Performance depending on learning rate and max iterations")
+            plt.title("Performance depending on learning rate and max iterations")
 
-            # plt.xlabel("(lr, max_iters)")
+            plt.xlabel("(lr, max_iters)")
 
-            # plt.ylabel("Perfromance (MSE)")
+            plt.ylabel("Perfromance (MSE)")
 
 
             
-            # plt.show()
+            plt.show()
 
         else:
             print("---------------------------We are not in cross validation --------------------------------------------------")
-            method_obj = LogisticRegression(args.lr, args.max_iters)
+            method_obj = LogisticRegression(1e-09, 6000)
         
     elif args.method == "linear_regression":
         if args.with_kernel == True : 

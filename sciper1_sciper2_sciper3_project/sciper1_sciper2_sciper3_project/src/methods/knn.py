@@ -89,7 +89,7 @@ class KNN(object):
         the indices of the K samples with smallest distance   
     """
     def find_k_smallest(self, distances):
-        indices = np.argsort(distances, kind='quicksort')
+        indices = np.argpartition(distances, kth=self.k, kind='introselect')
         return indices[:self.k]
 
     """
@@ -171,7 +171,7 @@ class KNN(object):
         self.fit(X_train, Y_train)
         Y_predicted = self.predict(X_validate)
 
-        loss = accuracy_fn(Y_predicted, Y_validate)
+        loss = macrof1_fn(Y_predicted, Y_validate)
         return loss
         
     def global_cross_validation(self, k, training_data, training_labels):
