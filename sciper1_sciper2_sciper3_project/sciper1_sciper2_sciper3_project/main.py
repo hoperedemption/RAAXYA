@@ -10,11 +10,8 @@ from src.methods.knn import KNN
 from src.utils import normalize_fn, append_bias_term, accuracy_fn, macrof1_fn, mse_fn
 import os
 np.random.seed(100)
-<<<<<<< HEAD
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-=======
->>>>>>> 5bf9f7196f1ea0903b3ae658b5b9f2fd6a2c17b5
 
 
 def main(args):
@@ -272,25 +269,25 @@ def main(args):
 
             
 
-            import pandas as pd
+            # import pandas as pd
 
-            plotdata = pd.DataFrame({
+            # plotdata = pd.DataFrame({
 
-                "tuples": model_performance},
+            #     "tuples": model_performance},
 
-                index= map(str, L))
+            #     index= map(str, L))
 
-            plotdata.plot(kind="bar",figsize=(15, 15))
+            # plotdata.plot(kind="bar",figsize=(15, 15))
 
-            plt.title("Performance depending on learning rate and max iterations")
+            # plt.title("Performance depending on learning rate and max iterations")
 
-            plt.xlabel("(lr, max_iters)")
+            # plt.xlabel("(lr, max_iters)")
 
-            plt.ylabel("Perfromance (MSE)")
+            # plt.ylabel("Perfromance (MSE)")
 
 
             
-            plt.show()
+            # plt.show()
 
         else:
             print("---------------------------We are not in cross validation --------------------------------------------------")
@@ -336,7 +333,6 @@ def main(args):
                 print(f"best_lambda: {best_lambda}")
                 print("------------ Results ----------------")
 
-<<<<<<< HEAD
                 plt.title("Performance of the model according lambda")
                 plt.xlabel("lambda in log_10 scale")
                 plt.ylabel("Performance")
@@ -346,8 +342,6 @@ def main(args):
 
 
 
-=======
->>>>>>> 5bf9f7196f1ea0903b3ae658b5b9f2fd6a2c17b5
     ## 4. Train and evaluate the method
 
     if args.task == "center_locating":
