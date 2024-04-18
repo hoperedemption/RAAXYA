@@ -11,6 +11,7 @@ from src.utils import normalize_fn, append_bias_term, accuracy_fn, macrof1_fn, m
 import os
 np.random.seed(100)
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 
 def main(args):
@@ -143,13 +144,15 @@ def main(args):
                     method_obj.weighting_fucntion = method_obj.decaying_weights
                     model_performance[i-1][j][1] = method_obj.global_cross_validation(k, xtrain, train)
 
-            argmins = np.sort(model_performance)[:2]
+            argmins = np.argsort(model_performance, axis=None)[-3::1]
+            print(argmins)
             best_K = k_list[argmins // 6]
-            best_distance_function = distance_functions[(argmins % 6) // 2]
-            best_weighting_function = None if argmins % 2 == 0 else method_obj.decaying_weights
-            method_obj.K = best_K
-            method_obj.distance_function = best_distance_function
-            method_obj.weighting_fucntion = best_weighting_function
+            print(((argmins % 6) // 2).tolist())
+            best_distance_function = np.array(distance_functions)[(argmins % 6) // 2]
+            best_weighting_function = np.where(argmins % 2 == 0, None, method_obj.decaying_weights)
+            method_obj.K = best_K[-1]
+            method_obj.distance_function = best_distance_function[-1]
+            method_obj.weighting_fucntion = best_weighting_function[-1]
 
             print("------------ Results ----------------")
             print(f"model_performance: {model_performance}")
@@ -158,6 +161,37 @@ def main(args):
             print(f"best_distance_function: {best_distance_function}")
             print(f"best_weighting_function: {best_weighting_function}")
             print("------------ Results ----------------")
+
+
+            # distance_functions_string = ["euclid_distance", "Minkowski", "Radial basis fucntion"]
+            # weighting_function_stirng = ["Identity", "inverse exponential"]
+
+            # fig = plt.figure()
+            # ax = fig.add_subplot(projection='3d')
+
+            # colors = ['r', 'g', 'b', 'y']
+            # yticks = distance_functions_string
+            # for c, k in zip(colors, yticks):
+            #     # Generate the random data for the y=k 'layer'.
+            #     xs = np.arange(20)
+            #     ys = np.random.rand(20)
+
+            #     # You can provide either a single color or an array with the same length as
+            #     # xs and ys. To demonstrate this, we color the first bar of each set cyan.
+            #     cs = [c] * len(xs)
+            #     cs[0] = 'c'
+
+            #     # Plot the bar graph given by xs and ys on the plane y=k with 80% opacity.
+            #     ax.bar(xs, ys, zs=k, zdir='y', color=cs, alpha=0.8)
+
+            # ax.set_xlabel('X')
+            # ax.set_ylabel('Y')
+            # ax.set_zlabel('Z')
+
+            # # On the y-axis let's only label the discrete values that we have data for.
+            # ax.set_yticks(yticks)
+
+            # plt.show()
         else:
             method_obj = KNN(args.K, task)
 
@@ -185,6 +219,10 @@ def main(args):
                 print("----------------------------------------------------------------------------")
                 print(f"Iteration number in index_list is {index}")
                 print("----------------------------------------------------------------------------")
+
+                if index == 9:
+                    print("I am here")
+
                 method_obj.lr = lr_list[index]
                 method_obj.max_iters = max_iters_list[index]
                 
@@ -215,6 +253,42 @@ def main(args):
             print(f"sigma_performance: {sigma_performance}")
             print(f"best_sigma: {best_sigma}")
             print("------------ Results ----------------")
+
+            plt.title("Performance of the model according lambda")
+            plt.xlabel("lambda in log_10 scale")
+            plt.ylabel("Performance")
+
+            L=[]
+            model_performance = model_performance.reshape(-1)
+
+            for i in index_list:
+                L.append((lr_list[i], max_iters_list[i]))
+                print("L[i]", L[i])
+
+                print("model_performance : ", model_performance[i])
+
+            
+
+            import pandas as pd
+
+            plotdata = pd.DataFrame({
+
+                "tuples": model_performance},
+
+                index= map(str, L))
+
+            plotdata.plot(kind="bar",figsize=(15, 15))
+
+            plt.title("Performance depending on learning rate and max iterations")
+
+            plt.xlabel("(lr, max_iters)")
+
+            plt.ylabel("Perfromance (MSE)")
+
+
+            
+            plt.show()
+
         else:
             print("---------------------------We are not in cross validation --------------------------------------------------")
             method_obj = LogisticRegression(args.lr, args.max_iters)
@@ -248,6 +322,9 @@ def main(args):
                     method_obj.lmda = lmbda
                     model_performance[i] = method_obj.global_cross_validation(k, xtrain, ctrain)
                     
+                np.append(lambda_list, 0)
+                method_obj.lmda = 0
+                np.append(model_performance, method_obj.global_cross_validation(k, xtrain, ctrain))
                 best_lambda = lambda_list[np.argmin(model_performance)]
                 method_obj.lmda = best_lambda
 
@@ -257,6 +334,8 @@ def main(args):
                 print("------------ Results ----------------")
 
                 plt.title("Performance of the model according lambda")
+                plt.xlabel("lambda in log_10 scale")
+                plt.ylabel("Performance")
                 plt.plot(np.log10(lambda_list), model_performance)
                 plt.show()
                 plt.savefig("performace.png")

@@ -61,11 +61,13 @@ class LogisticRegression(object):
         ### WRITE YOUR CODE HERE 
         # Hint: try to decompose the above formula in different steps to avoid recomputing the same things.
         linear = data @ W
-        aux = np.exp(linear)
+        max_element = np.max(linear, axis=1)[:, np.newaxis]
+        linear -= max_element
+        aux = np.exp(linear) # this allows to avoid overflow
 
         sums = aux.sum(axis=1)
-        result = aux / sums[:, np.newaxis]
-        
+        result = np.where(sums[:, np.newaxis] == 0, 0, aux / sums[:, np.newaxis]) #if the sum is zero then necessarly the numerator 
+        #is very low, so near zero. Otherwise we can just compute the usual divisinon        
         return result
     
     
@@ -119,7 +121,6 @@ class LogisticRegression(object):
         for i in range(k + 1):
             if i == k:
                 cross_validate_indices = random_X_indices[batch_size*k:]
-                print(cross_validate_indices)
                 if cross_validate_indices.shape[0] == 0: break 
                 else: np.append(all_loss, 0)
             else:
@@ -157,15 +158,17 @@ class LogisticRegression(object):
         ##
         self.N, self.D, self.C = training_data.shape[0], training_data.shape[1], get_n_classes(training_labels)
 
-        print("D + C: " + str(self.D )+ "    " + str(self.C))
 
         self.weights = np.random.normal(0, self.sigma, (self.D, self.C))
-        print("weight init: " + str(self.weights))
+        
 
         labels = label_to_onehot(training_labels, self.C)
 
         for i in range(self.max_iters):
+            if i == 2:
+                print("Here")
             gradient = self.gradient_logistic_multi(training_data, labels, self.weights)
+
             self.weights = self.weights - self.lr * gradient
                     
             predictions = self.logistic_regression_predict_multi(training_data, self.weights)
