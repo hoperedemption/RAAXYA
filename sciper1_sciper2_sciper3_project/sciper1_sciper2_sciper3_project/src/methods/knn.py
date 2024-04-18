@@ -182,7 +182,7 @@ class KNN(object):
 
         # voir plus tard pour le reste
         random_X_indices = np.random.permutation(N)
-        all_loss = np.zeros((k + 1, 1))
+        all_loss = list()
 
         for i in range(k + 1):
             if i == k:
@@ -199,7 +199,7 @@ class KNN(object):
             X_validate = training_data[cross_validate_indices]
             Y_validate = training_labels[cross_validate_indices]
 
-            all_loss[i] = self.cross_validation_one_iteration(batch_size, X_train, X_validate, Y_train, Y_validate)
+            all_loss.append(self.cross_validation_one_iteration(batch_size, X_train, X_validate, Y_train, Y_validate))
 
         mean_loss = np.mean(all_loss)
         return mean_loss
