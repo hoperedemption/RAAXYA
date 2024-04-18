@@ -10,8 +10,13 @@ from src.methods.knn import KNN
 from src.utils import normalize_fn, append_bias_term, accuracy_fn, macrof1_fn, mse_fn
 import os
 np.random.seed(100)
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+from mpl_toolkits import mplot3d
 from mpl_toolkits.mplot3d import Axes3D
+
 
 
 def main(args):
@@ -129,7 +134,7 @@ def main(args):
 
         if args.k_fold == True :
             
-            k_list = np.arange(1, 26)
+            k_list = np.array(range(1, 27))
 
             distance_functions = [method_obj.euclid_distance, method_obj.minkowski, method_obj.radial_basis_function]
 
@@ -139,59 +144,67 @@ def main(args):
                 for j, f in enumerate(distance_functions):
                     method_obj.distance_function = f
                     method_obj.K = i
-                    method_obj.weighting_fucntion = None
+                    method_obj.weighting_function = None
                     model_performance[i-1][j][0] = method_obj.global_cross_validation(k, xtrain, train)
-                    method_obj.weighting_fucntion = method_obj.decaying_weights
+                    method_obj.weighting_function = method_obj.decaying_weights
                     model_performance[i-1][j][1] = method_obj.global_cross_validation(k, xtrain, train)
 
-            argmins = np.argsort(model_performance, axis=None)[-3::1]
-            print(argmins)
-            best_K = k_list[argmins // 6]
-            print(((argmins % 6) // 2).tolist())
-            best_distance_function = np.array(distance_functions)[(argmins % 6) // 2]
-            best_weighting_function = np.where(argmins % 2 == 0, None, method_obj.decaying_weights)
-            method_obj.K = best_K[-1]
-            method_obj.distance_function = best_distance_function[-1]
-            method_obj.weighting_fucntion = best_weighting_function[-1]
+            raveled_performance = np.ravel(model_performance)
+            print(raveled_performance)
+            if(args.task == 'breed_identifying'):
+                argsbest = np.argpartition(raveled_performance, kth=-3)[-3:]
+                best_index = -1
+            elif(args.task == 'center_locating'):
+                argsbest = np.argpartition(raveled_performance, kth=3)[:3]
+                best_index = 0
+
+            best_K = k_list[argsbest // 6]
+            best_distance_function = np.array(distance_functions)[(argsbest % 6) // 2]
+            best_weighting_functions = np.where(argsbest % 2 == 0, None, method_obj.decaying_weights)
+            method_obj.K = best_K[best_index]
+            method_obj.distance_function = best_distance_function[best_index]
+            best_weighting_function = best_weighting_functions[best_index]
+            method_obj.weighting_function = best_weighting_function
+            best_model_performances = raveled_performance[argsbest]
+            best_model_performance = model_performance[argsbest // 6][(argsbest % 6) // 2][argsbest % 2]
+            print(model_performance)
 
             print("------------ Results ----------------")
             print(f"model_performance: {model_performance}")
-            print(f"argmins: {argmins}")
+            print(f"argsbest: {argsbest}")
             print(f"best_K: {best_K}")
             print(f"best_distance_function: {best_distance_function}")
+            print(f"best weighting functions: {best_weighting_functions}")
             print(f"best_weighting_function: {best_weighting_function}")
+            print(f"best model performances: {best_model_performances}")
             print("------------ Results ----------------")
 
 
-            # distance_functions_string = ["euclid_distance", "Minkowski", "Radial basis fucntion"]
-            # weighting_function_stirng = ["Identity", "inverse exponential"]
+            # deleted ohio plot stuff
+            fig = plt.figure()
+            ax = fig.add_subplot(projection="3d")
 
-            # fig = plt.figure()
-            # ax = fig.add_subplot(projection='3d')
+            x_data, y_data, z_data = np.meshgrid(k_list, np.array(range(0, 3)), np.array(range(0, 2)), indexing='ij')
+            color_map = cm.winter
+            plot3d = ax.scatter(x_data, y_data, z_data, c=raveled_performance, cmap=color_map)
+            
+            cbar = fig.colorbar(plot3d, label="Model Performance", ax=ax, shrink=0.6, orientation='horizontal')
+            cbar.set_label("Model performance")
 
-            # colors = ['r', 'g', 'b', 'y']
-            # yticks = distance_functions_string
-            # for c, k in zip(colors, yticks):
-            #     # Generate the random data for the y=k 'layer'.
-            #     xs = np.arange(20)
-            #     ys = np.random.rand(20)
+            ax.set_xticks(list([1, 5, 10, 15, 20, 25]))
+            ax.set_yticks([0, 1, 2])
+            ax.set_yticklabels(["Euclid", "L4", "RBF"])
+            ax.set_zticks([0, 1])
+            ax.set_zticklabels(['Id', 'Exp'])
 
-            #     # You can provide either a single color or an array with the same length as
-            #     # xs and ys. To demonstrate this, we color the first bar of each set cyan.
-            #     cs = [c] * len(xs)
-            #     cs[0] = 'c'
+            ax.set(xlabel=(r'Value of $k$'), ylabel=('Distance metric'), zlabel=('Weighting function'))
 
-            #     # Plot the bar graph given by xs and ys on the plane y=k with 80% opacity.
-            #     ax.bar(xs, ys, zs=k, zdir='y', color=cs, alpha=0.8)
+            if args.task == 'breed_identifying':
+                plt.savefig("knn_performance_classification.png")
+            elif args.task == 'center_locating':
+                plt.savefig("knn_performance_regression.png")
 
-            # ax.set_xlabel('X')
-            # ax.set_ylabel('Y')
-            # ax.set_zlabel('Z')
 
-            # # On the y-axis let's only label the discrete values that we have data for.
-            # ax.set_yticks(yticks)
-
-            # plt.show()
         else:
             method_obj = KNN(args.K, task)
 
@@ -219,10 +232,6 @@ def main(args):
                 print("----------------------------------------------------------------------------")
                 print(f"Iteration number in index_list is {index}")
                 print("----------------------------------------------------------------------------")
-
-                if index == 9:
-                    print("I am here")
-
                 method_obj.lr = lr_list[index]
                 method_obj.max_iters = max_iters_list[index]
                 
@@ -269,25 +278,6 @@ def main(args):
 
             
 
-            # import pandas as pd
-
-            # plotdata = pd.DataFrame({
-
-            #     "tuples": model_performance},
-
-            #     index= map(str, L))
-
-            # plotdata.plot(kind="bar",figsize=(15, 15))
-
-            # plt.title("Performance depending on learning rate and max iterations")
-
-            # plt.xlabel("(lr, max_iters)")
-
-            # plt.ylabel("Perfromance (MSE)")
-
-
-            
-            # plt.show()
 
         else:
             print("---------------------------We are not in cross validation --------------------------------------------------")
@@ -337,8 +327,7 @@ def main(args):
                 plt.xlabel("lambda in log_10 scale")
                 plt.ylabel("Performance")
                 plt.plot(np.log10(lambda_list), model_performance)
-                plt.show()
-                plt.savefig("performace.png")
+                plt.savefig("linear_resgression_performace.png")
 
 
 

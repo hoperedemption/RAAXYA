@@ -14,7 +14,7 @@ class KNN(object):
         self.task_kind = task_kind
 
         self.distance_function = self.euclid_distance
-        self.weighting_fucntion = None
+        self.weighting_function = None
 
     # Some helper functions
     """
@@ -89,7 +89,7 @@ class KNN(object):
         the indices of the K samples with smallest distance   
     """
     def find_k_smallest(self, distances):
-        indices = np.argsort(distances, kind='quicksort')
+        indices = np.argpartition(distances, kth=self.k, kind='introselect')
         return indices[:self.k]
 
     """
@@ -167,11 +167,14 @@ class KNN(object):
     def knn(self, target_vectors):
         return np.apply_along_axis(func1d=self.knn_one_step_target_vector, axis=1, arr=target_vectors)
         
-    def cross_validation_one_iteration(self, batch_size, X_train, X_validate, Y_train, Y_validate):
+    def cross_validation_one_iteration(self, X_train, X_validate, Y_train, Y_validate):
         self.fit(X_train, Y_train)
         Y_predicted = self.predict(X_validate)
-
-        loss = accuracy_fn(Y_predicted, Y_validate)
+        
+        if(self.task_kind == "classification"):
+            loss = macrof1_fn(Y_predicted, Y_validate)
+        else:
+            loss = mse_fn(Y_predicted, Y_validate)
         return loss
         
     def global_cross_validation(self, k, training_data, training_labels):
