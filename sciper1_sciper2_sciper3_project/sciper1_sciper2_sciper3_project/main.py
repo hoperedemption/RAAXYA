@@ -10,8 +10,11 @@ from src.methods.knn import KNN
 from src.utils import normalize_fn, append_bias_term, accuracy_fn, macrof1_fn, mse_fn
 import os
 np.random.seed(100)
+<<<<<<< HEAD
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+=======
+>>>>>>> 5bf9f7196f1ea0903b3ae658b5b9f2fd6a2c17b5
 
 
 def main(args):
@@ -333,6 +336,7 @@ def main(args):
                 print(f"best_lambda: {best_lambda}")
                 print("------------ Results ----------------")
 
+<<<<<<< HEAD
                 plt.title("Performance of the model according lambda")
                 plt.xlabel("lambda in log_10 scale")
                 plt.ylabel("Performance")
@@ -342,6 +346,8 @@ def main(args):
 
 
 
+=======
+>>>>>>> 5bf9f7196f1ea0903b3ae658b5b9f2fd6a2c17b5
     ## 4. Train and evaluate the method
 
     if args.task == "center_locating":
