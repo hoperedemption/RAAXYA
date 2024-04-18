@@ -10,7 +10,6 @@ from src.methods.knn import KNN
 from src.utils import normalize_fn, append_bias_term, accuracy_fn, macrof1_fn, mse_fn
 import os
 np.random.seed(100)
-import matplotlib.pyplot as plt
 
 
 def main(args):
@@ -255,13 +254,6 @@ def main(args):
                 print(f"model_performance: {model_performance}")
                 print(f"best_lambda: {best_lambda}")
                 print("------------ Results ----------------")
-
-                plt.title("Performance of the model according lambda")
-                plt.plot(np.log10(lambda_list), model_performance)
-                plt.show()
-                plt.savefig("performace.png")
-
-
 
     ## 4. Train and evaluate the method
 
