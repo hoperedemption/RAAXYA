@@ -65,8 +65,8 @@ class LogisticRegression(object):
         linear -= max_element
         aux = np.exp(linear) # this allows to avoid overflow
 
-        sums = aux.sum(axis=1)
-        result = np.where(sums[:, np.newaxis] == 0, 0, aux / sums[:, np.newaxis]) #if the sum is zero then necessarly the numerator 
+        sums = aux.sum(axis=1)[:, np.newaxis]
+        result = np.where(sums == 0, 0, aux / sums) #if the sum is zero then necessarly the numerator 
         #is very low, so near zero. Otherwise we can just compute the usual divisinon        
         return result
     
