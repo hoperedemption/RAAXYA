@@ -94,18 +94,14 @@ def main(args):
         ytest = ytrain[test_index]
         ytrain = ytrain[train_index]
 
-    new_xtrain = np.zeros(xtrain.shape)
-    new_ytrain = np.zeros(ytrain.shape)
-    new_xtrain[:] = xtrain 
-    new_ytrain[:] = ytrain
-
-    for i in range(new_xtrain.shape[0]):
+    for i in range(xtrain.shape[0]):
         #sharpen_turbo
-        #xtrain[i] = deskew(xtrain[i].reshape(28, 28)).reshape(28 * 28)
+        xtrain[i] = deskew(xtrain[i].reshape(28, 28)).reshape(28 * 28)
         #xtrain[i] = sharpen(xtrain[i].reshape(28, 28)).reshape(28 * 28)
 
-        new_xtrain[i] = cdf_to_uniform(new_xtrain[i])
-        new_xtrain[i] = sharpen_turbo(new_xtrain[i].reshape(28, 28)).reshape(28 * 28)
+        #xtrain[i] = cdf_to_uniform(xtrain[i])
+        #new_xtrain[i] = sharpen_turbo(new_xtrain[i].reshape(28, 28)).reshape(28 * 28)
+        #new_xtrain[i] = sharpen(new_xtrain[i].reshape(28, 28)).reshape(28 * 28)
 
         # u, s, v = np.linalg.svd(xtrain[i].reshape(28, 28), full_matrices=False)
         # cumsum = np.cumsum(s)
@@ -115,10 +111,12 @@ def main(args):
         # xtrain[i] = (u[:, :ind] @ np.diag(s)[:ind, :ind] @ v[:ind, :]).reshape(28 * 28)
     
     for i in range(xtest.shape[0]):
-        #xtest[i] = deskew(xtest[i].reshape(28, 28)).reshape(28 * 28)
+        xtest[i] = deskew(xtest[i].reshape(28, 28)).reshape(28 * 28)
         #xtest[i] = sharpen(xtest[i].reshape(28, 28)).reshape(28 * 28)
-        xtest[i] = cdf_to_uniform(xtest[i])
-        xtest[i] = sharpen_turbo(xtest[i].reshape(28, 28)).reshape(28 * 28)
+
+        #xtest[i] = cdf_to_uniform(xtest[i])
+        #xtest[i] = sharpen_turbo(xtest[i].reshape(28, 28)).reshape(28 * 28)
+        #xtest[i] = sharpen(xtrain[i].reshape(28, 28)).reshape(28 * 28)
 
         # u, s, v = np.linalg.svd(xtest[i].reshape(28, 28), full_matrices=False)
         # cumsum = np.cumsum(s)
@@ -131,27 +129,55 @@ def main(args):
     xtrain /= 255
     xtest /= 255
 
-    labels_printed = np.zeros(10)
-    for i in range(xtrain.shape[0]):
-        if(np.sum(labels_printed) == 10):
-            break
-        label = ytrain[i]
-        labels_printed[label] = 1
+    # labels_printed = np.zeros(10)
+    # for i in range(xtrain.shape[0]):
+    #     if(np.sum(labels_printed) == 10):
+    #         break
+    #     label = ytrain[i]
+    #     labels_printed[label] = 1
 
-        image = xtrain[i]
-        imgplot = plt.imshow(image.reshape(28, 28), cmap='gray')
-        plt.savefig(f'random_sample_{i}_label_{label}_original.png', bbox_inches='tight') 
+    #     image = xtrain[i]
+    #     imgplot = plt.imshow(image.reshape(28, 28), cmap='gray')
+    #     plt.savefig(f'random_sample_{i}_label_{label}_original.png', bbox_inches='tight') 
 
-        transformed_image = new_xtrain[i]
-        imgplot = plt.imshow(transformed_image.reshape(28, 28), cmap='gray')
-        plt.savefig(f'random_sample_{i}_label_{label}_tranformed_image.png', bbox_inches='tight') 
+    #     transformed_image = new_xtrain[i]
+    #     imgplot = plt.imshow(transformed_image.reshape(28, 28), cmap='gray')
+    #     plt.savefig(f'random_sample_{i}_label_{label}_tranformed_image_with_cdfonly.png', bbox_inches='tight') 
 
-    # center the images on the screen
+    # # center the images on the screen
 
     random_image = xtrain[np.random.randint(0, xtrain.shape[0])]
     imgplot = plt.imshow(random_image.reshape(28, 28), cmap='gray')
     plt.savefig('random_sample.png', bbox_inches='tight') 
+        
+    num_indices = np.random.randint(xtrain.shape[0] // 4, xtrain.shape[0] // 2)
+    selected_indices = np.random.choice(xtrain.shape[0], num_indices, replace=False)
+    new_xtrain = np.zeros((xtrain.shape[0] +  2 * num_indices, xtrain.shape[1]))
+    new_ytrain = np.zeros(ytrain.shape[0] + 2 * num_indices)
+    new_xtrain[:xtrain.shape[0], :] = xtrain 
+    new_ytrain[:ytrain.shape[0]] = ytrain
+    
 
+    for i in range(0, 2 * num_indices, 2):
+        index = selected_indices[i//2]
+
+        horizontal_flip = (xtrain[index].reshape(28, 28))[::, ::-1].reshape(28 * 28)
+
+        reshaped_image = xtrain[index].reshape(28, 28)
+        rand_bis = np.random.uniform(0, 1)
+        if rand_bis <= 0.5:
+            reshaped_image[:int(rand_bis*28), :] = 0
+        elif rand_bis > 0.5:
+            reshaped_image[int(rand_bis*28):, :] = 0
+        reshaped_image = reshaped_image.reshape(28 * 28)
+
+        new_xtrain[xtrain.shape[0] + i] = horizontal_flip
+        new_xtrain[xtrain.shape[0] + (i + 1)] = reshaped_image
+        new_ytrain[ytrain.shape[0] + i] = ytrain[index]
+        new_ytrain[ytrain.shape[0] + (i + 1)] = ytrain[index]
+
+    xtrain = new_xtrain.astype('float64')
+    ytrain = new_ytrain.astype('int64')
     ## 2. Then we must prepare it. This is were you can create a validation set,
     #  normalize, add bias, etc.
 

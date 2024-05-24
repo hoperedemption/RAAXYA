@@ -16,7 +16,7 @@ class MLP(nn.Module):
     It should not use any convolutional layers.
     """
 
-    def __init__(self, input_size, n_classes, dimensions_=[256, 512, 64], activations=["relu", "tanh", "relu", "sigmoid"]):
+    def __init__(self, input_size, n_classes, dimensions_=[512, 512], activations=["relu", "relu", "tanh"]):
         """
         Initialize the network.
         
@@ -77,8 +77,8 @@ class MLP(nn.Module):
         preds = x
 
         for i in range(self.n_layers-1):
-            preds = self.activations[i](F.dropout(self.linear_functions[i](preds), p=0.5))
-            #preds = self.activations[i](self.linear_functions[i](preds))
+            #preds = self.activations[i](F.dropout(self.linear_functions[i](preds), p=0.5))
+            preds = self.activations[i](self.linear_functions[i](preds))
 
         return preds #no softmax done
 
@@ -415,7 +415,7 @@ class Trainer(object):
 
         self.criterion = nn.CrossEntropyLoss()
         if optimizer_name == "Adam":
-            self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr, weight_decay=0.005)  ### WRITE YOUR CODE HERE
+            self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)  ### WRITE YOUR CODE HERE
         elif optimizer_name == "SGD":
             self.optimizer = torch.optim.SGD(self.parameters(), lr=self.lr) # I am not sure 
         
