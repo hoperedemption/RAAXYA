@@ -12,7 +12,49 @@ from src.methods.pca import PCA
 from src.methods.deep_network import MLP, CNN, Trainer, MyViT
 from src.utils import normalize_fn, append_bias_term, accuracy_fn, macrof1_fn, get_n_classes
 
+import scipy.ndimage
 from scipy.ndimage import interpolation
+
+def moments(image):
+    c0,c1 = np.mgrid[:image.shape[0],:image.shape[1]] # A trick in numPy to create a mesh grid
+    totalImage = np.sum(image) #sum of pixels
+    m0 = np.sum(c0*image)/totalImage #mu_x
+    m1 = np.sum(c1*image)/totalImage #mu_y
+    m00 = np.sum((c0-m0)**2*image)/totalImage #var(x)
+    m11 = np.sum((c1-m1)**2*image)/totalImage #var(y)
+    m01 = np.sum((c0-m0)*(c1-m1)*image)/totalImage #covariance(x,y)
+    mu_vector = np.array([m0,m1]) # Notice that these are \mu_x, \mu_y respectively
+    covariance_matrix = np.array([[m00,m01],[m01,m11]]) # Do you see a similarity between the covariance matrix
+    return mu_vector, covariance_matrix
+def deskew(image):
+    c,v = moments(image)
+    alpha = v[0,1]/v[0,0]
+    affine = np.array([[1,0],[alpha,1]]) # <-- 
+    ocenter = np.array(image.shape)/2.0
+    offset = c-np.dot(affine,ocenter)
+    return interpolation.affine_transform(image,affine,offset=offset)
+def sharpen(image):
+    kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
+    sharpened_image = scipy.ndimage.convolve(image, kernel)
+    sharpened_image = np.clip(sharpened_image, 0, 255)
+    return sharpened_image
+def sharpen_turbo(image):
+    kernel = -np.array([[1, 4, 6, 4, 1], [4, 16, 24, 26, 4],
+                        [6, 24, -476, 24, 6], [4, 16, 24, 16, 4], 
+                        [1, 4, 6, 4, 1]])/256
+    sharpened_image = scipy.ndimage.convolve(image, kernel)
+    sharpened_image = np.clip(sharpened_image, 0, 255)
+    return sharpened_image
+def cdf_to_uniform(image):
+    image_histogram, image_bins = np.histogram(image, 256, density=True)
+    cumsum = np.cumsum(image_histogram)
+    cdf = image_bins[-1] * cumsum / cumsum[-1]
+
+    image_edited = np.interp(image, image_bins[:-1], cdf)
+    return image_edited
+    
+
+    
 
 def main(args):
     """
@@ -52,33 +94,47 @@ def main(args):
         ytest = ytrain[test_index]
         ytrain = ytrain[train_index]
 
+    for i in range(xtrain.shape[0]):
+        #sharpen_turbo
+        #xtrain[i] = deskew(xtrain[i].reshape(28, 28)).reshape(28 * 28)
+        #xtrain[i] = sharpen(xtrain[i].reshape(28, 28)).reshape(28 * 28)
+
+        xtrain[i] = cdf_to_uniform(xtrain[i])
+        xtrain[i] = sharpen_turbo(xtrain[i].reshape(28, 28)).reshape(28 * 28)
+
+        # u, s, v = np.linalg.svd(xtrain[i].reshape(28, 28), full_matrices=False)
+        # cumsum = np.cumsum(s)
+        # ratio = cumsum / cumsum[-1]
+        # threshold = 0.85
+        # ind = np.argmax(ratio > threshold)
+        # xtrain[i] = (u[:, :ind] @ np.diag(s)[:ind, :ind] @ v[:ind, :]).reshape(28 * 28)
+    
+    for i in range(xtest.shape[0]):
+        #xtest[i] = deskew(xtest[i].reshape(28, 28)).reshape(28 * 28)
+        #xtest[i] = sharpen(xtest[i].reshape(28, 28)).reshape(28 * 28)
+        xtest[i] = cdf_to_uniform(xtest[i])
+        xtest[i] = sharpen_turbo(xtest[i].reshape(28, 28)).reshape(28 * 28)
+
+        # u, s, v = np.linalg.svd(xtest[i].reshape(28, 28), full_matrices=False)
+        # cumsum = np.cumsum(s)
+        # ratio = cumsum / cumsum[-1]
+        # threshold = 0.85
+        # ind = np.argmax(ratio > threshold)
+        # xtest[i] = (u[:, :ind] @ np.diag(s)[:ind, :ind] @ v[:ind, :]).reshape(28 * 28)
+
     # normalise the pixel ranges
     xtrain /= 255
     xtest /= 255
 
-    def moments(image):
-        c0,c1 = np.mgrid[:image.shape[0],:image.shape[1]] # A trick in numPy to create a mesh grid
-        totalImage = np.sum(image) #sum of pixels
-        m0 = np.sum(c0*image)/totalImage #mu_x
-        m1 = np.sum(c1*image)/totalImage #mu_y
-        m00 = np.sum((c0-m0)**2*image)/totalImage #var(x)
-        m11 = np.sum((c1-m1)**2*image)/totalImage #var(y)
-        m01 = np.sum((c0-m0)*(c1-m1)*image)/totalImage #covariance(x,y)
-        mu_vector = np.array([m0,m1]) # Notice that these are \mu_x, \mu_y respectively
-        covariance_matrix = np.array([[m00,m01],[m01,m11]]) # Do you see a similarity between the covariance matrix
-        return mu_vector, covariance_matrix
-    def deskew(image):
-        c,v = moments(image)
-        alpha = v[0,1]/v[0,0]
-        affine = np.array([[1,0],[alpha,1]]) # <-- 
-        ocenter = np.array(image.shape)/2.0
-        offset = c-np.dot(affine,ocenter)
-        return interpolation.affine_transform(image,affine,offset=offset)
-    
+    labels_printed = np.zeros(10)
     for i in range(xtrain.shape[0]):
-        xtrain[i] = deskew(xtrain[i].reshape(28, 28)).reshape(784)
-    for i in range(xtest.shape[0]):
-        xtest[i] = deskew(xtest[i].reshape(28, 28)).reshape(784)
+        if(np.sum(labels_printed) == 10):
+            break
+        random_image = xtrain[i]
+        label = ytrain[i]
+        labels_printed[label] = 1
+        imgplot = plt.imshow(random_image.reshape(28, 28), cmap='gray')
+        plt.savefig(f'random_sample_{i}_label_{label}_turbo_sharpen_plus_interpolation.png', bbox_inches='tight') 
 
     # center the images on the screen
 
@@ -91,27 +147,27 @@ def main(args):
 
     ### WRITE YOUR CODE HERE to do any other data processing
 
-    D = xtrain.shape[1]
-    pca_obj = PCA(D)
-    pca_obj.find_principal_components(xtrain)
-    xtrain_normalised = pca_obj.reduce_dimension(xtrain) / np.sqrt(pca_obj.eigenvalues)
-    xtest_normalised = pca_obj.reduce_dimension(xtest) / np.sqrt(pca_obj.eigenvalues)
+    # D = xtrain.shape[1]
+    # pca_obj = PCA(D)
+    # pca_obj.find_principal_components(xtrain)
+    # xtrain_normalised = pca_obj.reduce_dimension(xtrain) / np.sqrt(pca_obj.eigenvalues)
+    # xtest_normalised = pca_obj.reduce_dimension(xtest) / np.sqrt(pca_obj.eigenvalues)
 
-    random_image_normalised = xtrain_normalised[np.random.randint(0, xtrain_normalised.shape[0])]
-    imgplot_normalised = plt.imshow(random_image_normalised.reshape(28, 28), cmap='gray')
-    plt.savefig('random_sample_normalised.png', bbox_inches='tight') 
+    # random_image_normalised = xtrain_normalised[np.random.randint(0, xtrain_normalised.shape[0])]
+    # imgplot_normalised = plt.imshow(random_image_normalised.reshape(28, 28), cmap='gray')
+    # plt.savefig('random_sample_normalised.png', bbox_inches='tight') 
 
     # Dimensionality reduction (MS2)
     if args.use_pca: #only for MLP
         print("Using PCA")
-        # pca_obj = PCA(d=args.pca_d)
+        pca_obj = PCA(d=args.pca_d)
         pca_obj.d = args.pca_d
         x_train_reduced = pca_obj.reduce_dimension(xtrain)
         x_test_reduced = pca_obj.reduce_dimension(xtest)
         ### WRITE YOUR CODE HERE: use the PCA object to reduce the dimensionality of the data
 
-    xtrain = xtrain_normalised
-    xtest = xtest_normalised
+    # xtrain = xtrain_normalised
+    # xtest = xtest_normalised
     
     ## 3. Initialize the method you want to use.
 

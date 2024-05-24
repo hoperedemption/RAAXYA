@@ -16,7 +16,7 @@ class MLP(nn.Module):
     It should not use any convolutional layers.
     """
 
-    def __init__(self, input_size, n_classes, dimensions_=[512, 512], activations=["relu", "relu", "sigmoid"]):
+    def __init__(self, input_size, n_classes, dimensions_=[256, 512, 64], activations=["relu", "tanh", "relu", "sigmoid"]):
         """
         Initialize the network.
         
@@ -52,8 +52,10 @@ class MLP(nn.Module):
         for fct in activations:
             if fct == "relu" : 
                 self.activations.append(F.relu)
-            else:
+            elif fct == "sigmoid":
                 self.activations.append(F.sigmoid)
+            elif fct == "tanh":
+                self.activations.append(lambda x : 1.71 * F.tanh(2/3 * x))
 
         # self.loss = nn.CrossEntropyLoss(reduction='none')
     def forward(self, x):
@@ -75,8 +77,8 @@ class MLP(nn.Module):
         preds = x
 
         for i in range(self.n_layers-1):
-            #preds = self.activations[i](F.dropout(self.linear_functions[i](preds), p=0.5))
-            preds = self.activations[i](self.linear_functions[i](preds))
+            preds = self.activations[i](F.dropout(self.linear_functions[i](preds), p=0.5))
+            #preds = self.activations[i](self.linear_functions[i](preds))
 
         return preds #no softmax done
 
