@@ -37,7 +37,7 @@ A more detailed overview can be found in our two reports under project_final_sub
   - [CNN (MobileNet-inspired)](#cnn-mobilenet-inspired)
   - [Neural Architecture Search for MLP](#neural-architecture-search-for-mlp)
   - [Vision Transformer (ViT)](#vision-transformer-vit)
-  - 
+    
  ## Task 1: Dog Classification
 In the first milestone of the project, we implemented basic machine learning algorithms to classify dogs based on their features. 
 
