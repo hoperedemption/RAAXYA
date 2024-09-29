@@ -42,7 +42,7 @@ A more detailed overview can be found in our two reports under project_final_sub
 In the first milestone of the project, we implemented basic machine learning algorithms to classify dogs based on their features. 
 
 ### KNN
-K-Nearest Neighbors (KNN) is a simple, instance-based learning method. For this task, we used KNN to classify dog breeds. We used different distance metrics, kernel trick with RBF and K-fold cross validation to select the best model possible.
+K-Nearest Neighbors (KNN) is a simple, instance-based learning method. For this task, we used KNN to classify dog breeds, as well as for the regression task of finding the center point. We used different distance metrics, kernel trick with RBF and K-fold cross validation to select the best model possible.
 
 - **Algorithm**: KNN
 - **Implementation Details**: 
